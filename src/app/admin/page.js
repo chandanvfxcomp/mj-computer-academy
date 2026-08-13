@@ -196,12 +196,12 @@ export default function AdminDashboard() {
                       </p>
                       {p.utr_number && (
                         <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
-                          UTR: <span className="font-mono">{p.utr_number}</span>
+                          Ref: <span className="font-mono">{p.utr_number}</span>
                         </p>
                       )}
-                      {p.payment_mode === "upi" && (
+                      {(p.payment_mode === "upi" || p.payment_mode === "bank_transfer" || p.payment_mode === "card") && p.utr_number && (
                         <p className="text-xs mt-0.5 font-semibold" style={{ color: p.ocr_matched ? "var(--success)" : "var(--danger)" }}>
-                          {p.ocr_matched ? "✓ Screenshot mein UTR match hua" : "⚠ Screenshot mein UTR match nahi hua — khud check karo"}
+                          {p.ocr_matched ? "✓ Screenshot mein reference match hua" : "⚠ Screenshot mein reference match nahi hua — khud check karo"}
                         </p>
                       )}
                     </div>

@@ -188,6 +188,17 @@ function genReceiptNumber() {
   return `MJCA-${Date.now().toString().slice(-6)}${rand}`;
 }
 
+function needsProof(mode) {
+  return mode === "upi" || mode === "bank_transfer" || mode === "card";
+}
+
+function proofLabel(mode) {
+  if (mode === "upi") return "UTR / Transaction ID";
+  if (mode === "bank_transfer") return "Transaction Reference Number";
+  if (mode === "card") return "Transaction ID (last 4 digits ya poora)";
+  return "Reference Number";
+}
+
 function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
   const supabase = createClient();
   const [amount, setAmount] = useState(suggestedAmount && suggestedAmount > 0 ? String(suggestedAmount) : "");
@@ -202,12 +213,12 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
     e.preventDefault();
     setError("");
 
-    if (paymentMode === "upi" && !utrNumber.trim()) {
-      setError("UPI payment ke liye UTR / Transaction ID dena zaroori hai");
+    if (needsProof(paymentMode) && !utrNumber.trim()) {
+      setError(`${proofLabel(paymentMode)} dena zaroori hai`);
       return;
     }
-    if (paymentMode === "upi" && !screenshotFile) {
-      setError("UPI payment ka screenshot upload karna zaroori hai");
+    if (needsProof(paymentMode) && !screenshotFile) {
+      setError("Payment proof (screenshot/receipt photo) upload karna zaroori hai");
       return;
     }
 
@@ -216,8 +227,8 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
     let screenshotUrl = null;
     let ocrMatched = null;
 
-    if (paymentMode === "upi" && screenshotFile) {
-      setStatusMsg("Screenshot verify ho raha hai...");
+    if (needsProof(paymentMode) && screenshotFile) {
+      setStatusMsg("Proof verify ho raha hai...");
       try {
         const Tesseract = (await import("tesseract.js")).default;
         const {
@@ -230,7 +241,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
         ocrMatched = null;
       }
 
-      setStatusMsg("Screenshot upload ho raha hai...");
+      setStatusMsg("Proof upload ho raha hai...");
       const ext = screenshotFile.name.split(".").pop();
       const path = `${studentId}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
@@ -254,7 +265,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
       payment_mode: paymentMode,
       receipt_number: genReceiptNumber(),
       status: "pending",
-      utr_number: paymentMode === "upi" ? utrNumber.trim() : null,
+      utr_number: needsProof(paymentMode) ? utrNumber.trim() : null,
       screenshot_url: screenshotUrl,
       ocr_matched: ocrMatched,
     });
@@ -283,12 +294,12 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
             <option value="card">Card</option>
           </select>
 
-          {paymentMode === "upi" && (
+          {needsProof(paymentMode) && (
             <>
               <input
                 required
                 type="text"
-                placeholder="UTR / Transaction ID"
+                placeholder={proofLabel(paymentMode)}
                 value={utrNumber}
                 onChange={(e) => setUtrNumber(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2"
@@ -296,7 +307,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
               />
               <div>
                 <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>
-                  Payment Screenshot
+                  Payment Proof (screenshot / receipt photo)
                 </label>
                 <input
                   required
