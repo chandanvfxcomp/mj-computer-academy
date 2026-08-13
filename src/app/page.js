@@ -97,10 +97,7 @@ export default function LoginPage() {
           </button>
 
           <p className="text-center text-sm mt-4" style={{ color: "var(--muted)" }}>
-            Naya student ho?{" "}
-            <a href="/signup" className="font-semibold" style={{ color: "var(--navy)" }}>
-              Account banao
-            </a>
+            Login detail nahi mila? Academy office se sampark karo.
           </p>
         </form>
       </div>

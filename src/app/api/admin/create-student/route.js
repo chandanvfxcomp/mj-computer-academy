@@ -23,7 +23,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Sirf admin allowed hai" }, { status: 403 });
   }
 
-  const { fullName, email, password, studentCode, course, phone } = await request.json();
+  const { fullName, email, password, studentCode, course, phone, courseId, customFee } = await request.json();
 
   if (!fullName || !email || !password) {
     return NextResponse.json({ error: "Naam, email aur password required hai" }, { status: 400 });
@@ -49,7 +49,12 @@ export async function POST(request) {
   // 3. Fill in the extra profile fields (the trigger already created the base row)
   const { error: updateError } = await adminClient
     .from("profiles")
-    .update({ student_code: studentCode || null, course: course || null, phone: phone || null })
+    .update({
+      student_code: studentCode || null,
+      course_id: courseId || null,
+      custom_fee: customFee === "" || customFee == null ? null : Number(customFee),
+      phone: phone || null,
+    })
     .eq("id", created.user.id);
 
   if (updateError) {
