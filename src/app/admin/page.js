@@ -313,6 +313,7 @@ export default function AdminDashboard() {
                     <tr key={s.id} className="border-b last:border-0 align-top">
                       <td className="px-4 py-3">
                         <p className="font-medium">{s.full_name}</p>
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>{s.email || "—"}</p>
                         <p className="text-xs" style={{ color: "var(--muted)" }}>{s.student_code || "code nahi diya"}</p>
                       </td>
                       <td className="px-4 py-3">{s.courses?.name || "—"}</td>

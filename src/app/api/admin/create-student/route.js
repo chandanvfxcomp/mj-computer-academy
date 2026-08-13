@@ -55,6 +55,7 @@ export async function POST(request) {
       custom_fee: customFee === "" || customFee == null ? null : Number(customFee),
       payment_plan: paymentPlan || "monthly",
       phone: phone || null,
+      email: email,
     })
     .eq("id", created.user.id);
 

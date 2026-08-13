@@ -78,6 +78,8 @@ export async function generateReceiptPDF(payment, student) {
   doc.text(`Name: ${student.full_name}`, 40, 230);
   doc.text(`Student Code: ${student.student_code || "-"}`, 40, 248);
   doc.text(`Course: ${student.courses?.name || student.course || "-"}`, 40, 266);
+  doc.text(`Email: ${student.email || "-"}`, 320, 230);
+  doc.text(`Phone: ${student.phone || "-"}`, 320, 248);
 
   // Payment table
   doc.setDrawColor(226, 228, 234);
@@ -117,6 +119,7 @@ export async function generateReceiptPDF(payment, student) {
 
   doc.setFontSize(9);
   doc.setTextColor(...muted);
+  doc.text("MJ Computer Academy  •  Email: mjcomputeracademy@gmail.com  •  Phone: +91-8002991116, 8862977872", 40, 765);
   doc.text("This is a system-generated receipt from MJ Computer Academy's fee portal.", 40, 780);
 
   doc.save(`Receipt-${payment.receipt_number}.pdf`);
