@@ -33,7 +33,7 @@ export async function middleware(request) {
   const protectedPath = path.startsWith("/admin") || path.startsWith("/student");
 
   if (!user && protectedPath) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return response;
