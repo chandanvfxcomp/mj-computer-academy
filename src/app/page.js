@@ -43,19 +43,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--navy)" }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg)" }}>
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <img src="/logo.png" alt="MJ Computer Academy" className="w-24 h-24 mx-auto mb-2 object-contain" />
-          <h1 className="font-display text-2xl font-bold text-white">MJ Computer Academy</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--gold-light)" }}>
+        <div className="text-center mb-6">
+          <img src="/logo.png" alt="MJ Computer Academy" className="w-28 h-28 mx-auto object-contain" />
+          <h1 className="font-display text-2xl font-bold" style={{ color: "var(--navy)" }}>MJ Computer Academy</h1>
+          <p className="text-sm mt-1 font-medium" style={{ color: "var(--gold)" }}>
             Fee Payment Portal
           </p>
         </div>
 
         <form
           onSubmit={handleLogin}
-          className="bg-white rounded-2xl p-6 shadow-xl"
+          className="bg-white rounded-2xl p-6 shadow-lg border"
+          style={{ borderColor: "#E9EAF0" }}
         >
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--muted)" }}>
             Email

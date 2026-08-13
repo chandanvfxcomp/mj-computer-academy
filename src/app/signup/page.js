@@ -42,8 +42,8 @@ export default function SignupPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--navy)" }}>
-        <div className="bg-white rounded-2xl p-8 max-w-sm text-center shadow-xl">
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg)" }}>
+        <div className="bg-white rounded-2xl p-8 max-w-sm text-center shadow-lg border" style={{ borderColor: "#E9EAF0" }}>
           <h2 className="font-display text-xl font-bold mb-2">Email confirm karo</h2>
           <p style={{ color: "var(--muted)" }}>
             Humne aapke email pe confirmation link bheja hai. Link pe click karke login kar sakte ho.
@@ -54,17 +54,17 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--navy)" }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg)" }}>
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <img src="/logo.png" alt="MJ Computer Academy" className="w-24 h-24 mx-auto mb-2 object-contain" />
-          <h1 className="font-display text-2xl font-bold text-white">Naya Account</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--gold-light)" }}>
+        <div className="text-center mb-6">
+          <img src="/logo.png" alt="MJ Computer Academy" className="w-28 h-28 mx-auto object-contain" />
+          <h1 className="font-display text-2xl font-bold" style={{ color: "var(--navy)" }}>Naya Account</h1>
+          <p className="text-sm mt-1 font-medium" style={{ color: "var(--gold)" }}>
             MJ Computer Academy
           </p>
         </div>
 
-        <form onSubmit={handleSignup} className="bg-white rounded-2xl p-6 shadow-xl">
+        <form onSubmit={handleSignup} className="bg-white rounded-2xl p-6 shadow-lg border" style={{ borderColor: "#E9EAF0" }}>
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--muted)" }}>
             Poora Naam
           </label>
