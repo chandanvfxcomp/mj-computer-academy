@@ -65,12 +65,7 @@ export default function StudentDashboard() {
       <header className="text-white" style={{ background: "var(--navy)" }}>
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center font-display font-bold text-sm"
-              style={{ background: "var(--gold)", color: "var(--navy)" }}
-            >
-              MJ
-            </div>
+            <img src="/logo.png" alt="MJ Computer Academy" className="w-10 h-10 object-contain rounded-lg bg-white p-0.5" />
             <div>
               <p className="font-display font-bold leading-tight">MJ Computer Academy</p>
               <p className="text-xs" style={{ color: "var(--gold-light)" }}>
@@ -127,7 +122,7 @@ export default function StudentDashboard() {
                   </p>
                 </div>
                 <button
-                  onClick={() => generateReceiptPDF(p, profile)}
+                  onClick={async () => await generateReceiptPDF(p, profile)}
                   className="text-sm font-semibold px-3 py-2 rounded-lg"
                   style={{ background: "var(--gold-light)", color: "var(--navy)" }}
                 >

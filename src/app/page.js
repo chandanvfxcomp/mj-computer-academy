@@ -46,12 +46,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--navy)" }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div
-            className="w-14 h-14 rounded-xl mx-auto mb-4 flex items-center justify-center font-display font-bold text-xl"
-            style={{ background: "var(--gold)", color: "var(--navy)" }}
-          >
-            MJ
-          </div>
+          <img src="/logo.png" alt="MJ Computer Academy" className="w-24 h-24 mx-auto mb-2 object-contain" />
           <h1 className="font-display text-2xl font-bold text-white">MJ Computer Academy</h1>
           <p className="text-sm mt-1" style={{ color: "var(--gold-light)" }}>
             Fee Payment Portal

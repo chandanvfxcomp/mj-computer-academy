@@ -1,6 +1,20 @@
 import jsPDF from "jspdf";
 
-export function generateReceiptPDF(payment, student) {
+async function loadLogoDataUrl() {
+  try {
+    const res = await fetch("/logo.png");
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function generateReceiptPDF(payment, student) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const navy = [16, 27, 52];
   const gold = [200, 155, 60];
@@ -12,14 +26,20 @@ export function generateReceiptPDF(payment, student) {
   doc.setFillColor(...gold);
   doc.rect(0, 90, 595, 4, "F");
 
+  const logoDataUrl = await loadLogoDataUrl();
+  if (logoDataUrl) {
+    doc.addImage(logoDataUrl, "PNG", 40, 15, 60, 60);
+  }
+
+  const textX = logoDataUrl ? 112 : 40;
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text("MJ Computer Academy", 40, 45);
+  doc.text("MJ Computer Academy", textX, 45);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
   doc.setTextColor(228, 197, 120);
-  doc.text("Official Fee Payment Receipt", 40, 65);
+  doc.text("Official Fee Payment Receipt", textX, 65);
 
   // Receipt meta box
   doc.setTextColor(...navy);
