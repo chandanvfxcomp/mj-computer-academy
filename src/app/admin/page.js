@@ -46,12 +46,9 @@ export default function AdminDashboard() {
         router.push("/");
         return;
       }
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      if (profile?.role !== "admin") {
+      const res = await fetch("/api/whoami");
+      const { role } = await res.json();
+      if (role !== "admin") {
         router.push("/student");
         return;
       }

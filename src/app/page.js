@@ -28,18 +28,15 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
+    // Server-side se role check karo (zyada reliable hai)
+    const res = await fetch("/api/whoami");
+    const { role } = await res.json();
 
-    if (profile?.role === "admin") {
-      router.push("/admin");
+    if (role === "admin") {
+      window.location.href = "/admin";
     } else {
-      router.push("/student");
+      window.location.href = "/student";
     }
-    router.refresh();
   }
 
   return (
