@@ -150,6 +150,9 @@ export default function StudentDashboard() {
                     {new Date(p.payment_date).toLocaleDateString("en-IN")} • {p.payment_mode.replace("_", " ")}
                   </p>
                   <p className="text-xs" style={{ color: "var(--muted)" }}>Receipt: {p.receipt_number}</p>
+                  {p.utr_number && (
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>Ref/UTR: {p.utr_number}</p>
+                  )}
                 </div>
                 {p.status === "approved" ? (
                   <button
@@ -225,6 +228,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
     setBusy(true);
 
     let screenshotUrl = null;
+    let screenshotPath = null;
     let ocrMatched = null;
 
     if (needsProof(paymentMode) && screenshotFile) {
@@ -255,6 +259,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
       }
       const { data: publicUrlData } = supabase.storage.from("payment-screenshots").getPublicUrl(path);
       screenshotUrl = publicUrlData.publicUrl;
+      screenshotPath = path;
     }
 
     setStatusMsg("Payment submit ho raha hai...");
@@ -267,6 +272,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
       status: "pending",
       utr_number: needsProof(paymentMode) ? utrNumber.trim() : null,
       screenshot_url: screenshotUrl,
+      screenshot_path: screenshotPath,
       ocr_matched: ocrMatched,
     });
     setBusy(false);

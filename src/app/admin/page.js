@@ -93,16 +93,22 @@ export default function AdminDashboard() {
     .filter((p) => p.status === "approved")
     .reduce((sum, p) => sum + Number(p.amount), 0);
 
-  async function approvePayment(paymentId) {
+  async function approvePayment(payment) {
+    if (payment.screenshot_path) {
+      await supabase.storage.from("payment-screenshots").remove([payment.screenshot_path]);
+    }
     await supabase
       .from("payments")
-      .update({ status: "approved" })
-      .eq("id", paymentId);
+      .update({ status: "approved", screenshot_url: null, screenshot_path: null })
+      .eq("id", payment.id);
     await loadData();
   }
 
-  async function rejectPayment(paymentId) {
-    await supabase.from("payments").delete().eq("id", paymentId);
+  async function rejectPayment(payment) {
+    if (payment.screenshot_path) {
+      await supabase.storage.from("payment-screenshots").remove([payment.screenshot_path]);
+    }
+    await supabase.from("payments").delete().eq("id", payment.id);
     await loadData();
   }
 
@@ -208,14 +214,14 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button
-                      onClick={() => rejectPayment(p.id)}
+                      onClick={() => rejectPayment(p)}
                       className="text-sm font-semibold px-3 py-1.5 rounded-lg border"
                       style={{ borderColor: "#E2E4EA", color: "var(--danger)" }}
                     >
                       Reject
                     </button>
                     <button
-                      onClick={() => approvePayment(p.id)}
+                      onClick={() => approvePayment(p)}
                       className="text-sm font-semibold px-3 py-1.5 rounded-lg text-white"
                       style={{ background: "var(--success)" }}
                     >
