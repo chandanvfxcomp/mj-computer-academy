@@ -192,13 +192,61 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
   const supabase = createClient();
   const [amount, setAmount] = useState(suggestedAmount && suggestedAmount > 0 ? String(suggestedAmount) : "");
   const [paymentMode, setPaymentMode] = useState("cash");
+  const [utrNumber, setUtrNumber] = useState("");
+  const [screenshotFile, setScreenshotFile] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+
+    if (paymentMode === "upi" && !utrNumber.trim()) {
+      setError("UPI payment ke liye UTR / Transaction ID dena zaroori hai");
+      return;
+    }
+    if (paymentMode === "upi" && !screenshotFile) {
+      setError("UPI payment ka screenshot upload karna zaroori hai");
+      return;
+    }
+
     setBusy(true);
+
+    let screenshotUrl = null;
+    let ocrMatched = null;
+
+    if (paymentMode === "upi" && screenshotFile) {
+      setStatusMsg("Screenshot verify ho raha hai...");
+      try {
+        const Tesseract = (await import("tesseract.js")).default;
+        const {
+          data: { text },
+        } = await Tesseract.recognize(screenshotFile, "eng");
+        const cleanText = text.replace(/[\s:]/g, "").toLowerCase();
+        const cleanUtr = utrNumber.replace(/[\s:]/g, "").toLowerCase();
+        ocrMatched = cleanUtr.length > 3 && cleanText.includes(cleanUtr);
+      } catch {
+        ocrMatched = null;
+      }
+
+      setStatusMsg("Screenshot upload ho raha hai...");
+      const ext = screenshotFile.name.split(".").pop();
+      const path = `${studentId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("payment-screenshots")
+        .upload(path, screenshotFile);
+
+      if (uploadError) {
+        setBusy(false);
+        setError(uploadError.message);
+        return;
+      }
+      const { data: publicUrlData } = supabase.storage.from("payment-screenshots").getPublicUrl(path);
+      screenshotUrl = publicUrlData.publicUrl;
+    }
+
+    setStatusMsg("Payment submit ho raha hai...");
     const { error: insertError } = await supabase.from("payments").insert({
       student_id: studentId,
       amount: Number(amount),
@@ -206,8 +254,12 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
       payment_mode: paymentMode,
       receipt_number: genReceiptNumber(),
       status: "pending",
+      utr_number: paymentMode === "upi" ? utrNumber.trim() : null,
+      screenshot_url: screenshotUrl,
+      ocr_matched: ocrMatched,
     });
     setBusy(false);
+    setStatusMsg("");
     if (insertError) {
       setError(insertError.message);
       return;
@@ -216,7 +268,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-display text-lg font-bold mb-1">Payment Submit Karo</h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
@@ -230,7 +282,36 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
             <option value="bank_transfer">Bank Transfer</option>
             <option value="card">Card</option>
           </select>
+
+          {paymentMode === "upi" && (
+            <>
+              <input
+                required
+                type="text"
+                placeholder="UTR / Transaction ID"
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+                style={{ borderColor: "#E2E4EA" }}
+              />
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>
+                  Payment Screenshot
+                </label>
+                <input
+                  required
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                  style={{ borderColor: "#E2E4EA" }}
+                />
+              </div>
+            </>
+          )}
+
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
+          {statusMsg && <p className="text-sm" style={{ color: "var(--muted)" }}>{statusMsg}</p>}
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>
             <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>

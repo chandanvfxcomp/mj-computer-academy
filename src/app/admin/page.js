@@ -181,15 +181,32 @@ export default function AdminDashboard() {
             <h2 className="font-display text-lg font-bold mb-3">Pending Payments (Approval Chahiye)</h2>
             <div className="bg-white rounded-2xl shadow-sm divide-y">
               {pendingPayments.map((p) => (
-                <div key={p.id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{p.student?.full_name || "Unknown"}</p>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>
-                      ₹{Number(p.amount).toLocaleString("en-IN")} • {p.payment_mode.replace("_", " ")} •{" "}
-                      {new Date(p.payment_date).toLocaleDateString("en-IN")}
-                    </p>
+                <div key={p.id} className="p-4 flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    {p.screenshot_url && (
+                      <a href={p.screenshot_url} target="_blank" rel="noreferrer">
+                        <img src={p.screenshot_url} alt="Payment proof" className="w-14 h-14 object-cover rounded-lg border" style={{ borderColor: "#E2E4EA" }} />
+                      </a>
+                    )}
+                    <div>
+                      <p className="font-medium">{p.student?.full_name || "Unknown"}</p>
+                      <p className="text-xs" style={{ color: "var(--muted)" }}>
+                        ₹{Number(p.amount).toLocaleString("en-IN")} • {p.payment_mode.replace("_", " ")} •{" "}
+                        {new Date(p.payment_date).toLocaleDateString("en-IN")}
+                      </p>
+                      {p.utr_number && (
+                        <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+                          UTR: <span className="font-mono">{p.utr_number}</span>
+                        </p>
+                      )}
+                      {p.payment_mode === "upi" && (
+                        <p className="text-xs mt-0.5 font-semibold" style={{ color: p.ocr_matched ? "var(--success)" : "var(--danger)" }}>
+                          {p.ocr_matched ? "✓ Screenshot mein UTR match hua" : "⚠ Screenshot mein UTR match nahi hua — khud check karo"}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 shrink-0">
                     <button
                       onClick={() => rejectPayment(p.id)}
                       className="text-sm font-semibold px-3 py-1.5 rounded-lg border"
