@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { generateReceiptPDF } from "@/lib/generateReceipt";
+import { installmentInfo, planLabel } from "@/lib/installment";
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -70,6 +71,9 @@ export default function StudentDashboard() {
   const totalFee = profile?.custom_fee != null ? Number(profile.custom_fee) : profile?.courses?.fee != null ? Number(profile.courses.fee) : null;
   const totalPaid = payments.filter((p) => p.status === "approved").reduce((sum, p) => sum + Number(p.amount), 0);
   const remaining = totalFee != null ? Math.max(totalFee - totalPaid, 0) : null;
+  const plan = profile?.payment_plan || "monthly";
+  const inst = totalFee != null ? installmentInfo(totalFee, profile?.courses?.duration_months, plan) : null;
+  const nextDue = inst ? Math.min(inst.amount, remaining ?? inst.amount) : remaining;
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
@@ -114,10 +118,11 @@ export default function StudentDashboard() {
           <p className="text-xs" style={{ color: "var(--muted)" }}>
             {profile?.courses?.name ? `Course: ${profile.courses.name}` : "Course abhi assign nahi hua"}
             {profile?.student_code ? ` • Code: ${profile.student_code}` : ""}
+            {totalFee != null ? ` • Plan: ${planLabel(plan)}` : ""}
           </p>
           {remaining != null && remaining > 0 && (
             <p className="text-xs mt-1 font-semibold" style={{ color: "var(--danger)" }}>
-              Baaki: ₹{remaining.toLocaleString("en-IN")}
+              Baaki: ₹{remaining.toLocaleString("en-IN")} {inst && `• Agli Installment: ₹${nextDue.toLocaleString("en-IN")}`}
             </p>
           )}
         </div>
@@ -166,7 +171,7 @@ export default function StudentDashboard() {
       {showPay && (
         <MakePaymentModal
           studentId={profile.id}
-          suggestedAmount={remaining}
+          suggestedAmount={nextDue}
           onClose={() => setShowPay(false)}
           onDone={async () => {
             setShowPay(false);

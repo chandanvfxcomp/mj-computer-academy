@@ -1,4 +1,5 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
@@ -21,19 +22,17 @@ export async function POST(request) {
     return NextResponse.json({ error: "Sirf admin allowed hai" }, { status: 403 });
   }
 
-  const { studentId, fullName, courseId, customFee, studentCode, phone, paymentPlan } = await request.json();
+  const { studentId, newPassword } = await request.json();
+  if (!studentId || !newPassword || newPassword.length < 6) {
+    return NextResponse.json({ error: "Password kam se kam 6 characters ka hona chahiye" }, { status: 400 });
+  }
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      full_name: fullName,
-      course_id: courseId || null,
-      custom_fee: customFee === "" || customFee === null ? null : Number(customFee),
-      payment_plan: paymentPlan || "monthly",
-      student_code: studentCode || null,
-      phone: phone || null,
-    })
-    .eq("id", studentId);
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  const { error } = await adminClient.auth.admin.updateUserById(studentId, { password: newPassword });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });

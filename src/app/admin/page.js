@@ -324,6 +324,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
   const [studentCode, setStudentCode] = useState("");
   const [courseId, setCourseId] = useState("");
   const [customFee, setCustomFee] = useState("");
+  const [paymentPlan, setPaymentPlan] = useState("monthly");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -335,7 +336,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
     const res = await fetch("/api/admin/create-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, password, studentCode, phone, courseId, customFee }),
+      body: JSON.stringify({ fullName, email, password, studentCode, phone, courseId, customFee, paymentPlan }),
     });
     const result = await res.json();
     setBusy(false);
@@ -361,6 +362,15 @@ function AddStudentModal({ courses, onClose, onDone }) {
             ))}
           </select>
           <input type="number" placeholder="Custom Fee / Offer (optional, override karega)" value={customFee} onChange={(e) => setCustomFee(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Payment Plan</label>
+            <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls} style={inputStyle}>
+              <option value="monthly">Monthly</option>
+              <option value="half_yearly">Half-Yearly</option>
+              <option value="yearly">Yearly</option>
+              <option value="one_time">One-Time (Full Payment)</option>
+            </select>
+          </div>
           <input placeholder="Student Code (optional)" value={studentCode} onChange={(e) => setStudentCode(e.target.value)} className={inputCls} style={inputStyle} />
           <input placeholder="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} />
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
@@ -381,9 +391,15 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   const [studentCode, setStudentCode] = useState(student.student_code || "");
   const [courseId, setCourseId] = useState(student.course_id || "");
   const [customFee, setCustomFee] = useState(student.custom_fee ?? "");
+  const [paymentPlan, setPaymentPlan] = useState(student.payment_plan || "monthly");
   const [phone, setPhone] = useState(student.phone || "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const [newPassword, setNewPassword] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwDone, setPwDone] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -392,7 +408,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
     const res = await fetch("/api/admin/update-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, studentCode, phone }),
+      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, studentCode, phone, paymentPlan }),
     });
     const result = await res.json();
     setBusy(false);
@@ -401,6 +417,29 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
       return;
     }
     onDone();
+  }
+
+  async function handleResetPassword() {
+    setPwError("");
+    setPwDone(false);
+    if (newPassword.length < 6) {
+      setPwError("Kam se kam 6 characters ka password daalo");
+      return;
+    }
+    setPwBusy(true);
+    const res = await fetch("/api/admin/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentId: student.id, newPassword }),
+    });
+    const result = await res.json();
+    setPwBusy(false);
+    if (!res.ok) {
+      setPwError(result.error || "Reset nahi hua");
+      return;
+    }
+    setPwDone(true);
+    setNewPassword("");
   }
 
   return (
@@ -416,6 +455,15 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
             ))}
           </select>
           <input type="number" placeholder="Custom Fee / Offer (optional)" value={customFee} onChange={(e) => setCustomFee(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Payment Plan</label>
+            <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls} style={inputStyle}>
+              <option value="monthly">Monthly</option>
+              <option value="half_yearly">Half-Yearly</option>
+              <option value="yearly">Yearly</option>
+              <option value="one_time">One-Time (Full Payment)</option>
+            </select>
+          </div>
           <input placeholder="Student Code" value={studentCode} onChange={(e) => setStudentCode(e.target.value)} className={inputCls} style={inputStyle} />
           <input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} />
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
@@ -426,6 +474,33 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
             </button>
           </div>
         </form>
+
+        <div className="mt-5 pt-4 border-t" style={{ borderColor: "#E2E4EA" }}>
+          <p className="text-sm font-semibold mb-2">Password Reset Karo</p>
+          <p className="text-xs mb-2" style={{ color: "var(--muted)" }}>Agar student password bhool gaya hai, yahan naya set kar do.</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              minLength={6}
+              placeholder="Naya password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="flex-1 border rounded-lg px-3 py-2 text-sm"
+              style={inputStyle}
+            />
+            <button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={pwBusy}
+              className="text-sm font-semibold px-3 py-2 rounded-lg text-white disabled:opacity-60"
+              style={{ background: "var(--gold)" }}
+            >
+              {pwBusy ? "..." : "Reset"}
+            </button>
+          </div>
+          {pwError && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{pwError}</p>}
+          {pwDone && <p className="text-xs mt-1" style={{ color: "var(--success)" }}>Password reset ho gaya — student ko naya password de do.</p>}
+        </div>
       </div>
     </div>
   );
@@ -497,16 +572,18 @@ function CoursesModal({ courses, onClose, onDone }) {
   const supabase = createClient();
   const [name, setName] = useState("");
   const [fee, setFee] = useState("");
+  const [duration, setDuration] = useState("6");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editFee, setEditFee] = useState("");
+  const [editDuration, setEditDuration] = useState("");
 
   async function handleAdd(e) {
     e.preventDefault();
     setError("");
     setBusy(true);
-    const { error: err } = await supabase.from("courses").insert({ name, fee: Number(fee) });
+    const { error: err } = await supabase.from("courses").insert({ name, fee: Number(fee), duration_months: Number(duration) });
     setBusy(false);
     if (err) {
       setError(err.message);
@@ -514,11 +591,12 @@ function CoursesModal({ courses, onClose, onDone }) {
     }
     setName("");
     setFee("");
+    setDuration("6");
     onDone();
   }
 
   async function saveFee(courseId) {
-    await supabase.from("courses").update({ fee: Number(editFee) }).eq("id", courseId);
+    await supabase.from("courses").update({ fee: Number(editFee), duration_months: Number(editDuration) }).eq("id", courseId);
     setEditingId(null);
     onDone();
   }
@@ -536,16 +614,20 @@ function CoursesModal({ courses, onClose, onDone }) {
         <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
           {courses.map((c) => (
             <div key={c.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
-              <span className="text-sm font-medium">{c.name}</span>
+              <div>
+                <span className="text-sm font-medium block">{c.name}</span>
+                <span className="text-xs" style={{ color: "var(--muted)" }}>{c.duration_months} months</span>
+              </div>
               {editingId === c.id ? (
                 <div className="flex items-center gap-1">
-                  <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} className="w-24 border rounded px-2 py-1 text-sm" style={inputStyle} />
+                  <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} placeholder="Fee" className="w-20 border rounded px-2 py-1 text-sm" style={inputStyle} />
+                  <input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} placeholder="Months" className="w-16 border rounded px-2 py-1 text-sm" style={inputStyle} />
                   <button onClick={() => saveFee(c.id)} className="text-xs font-semibold px-2 py-1 rounded" style={{ background: "var(--success)", color: "white" }}>Save</button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">₹{Number(c.fee).toLocaleString("en-IN")}</span>
-                  <button onClick={() => { setEditingId(c.id); setEditFee(c.fee); }} className="text-xs px-2 py-1 rounded border" style={{ borderColor: "#E2E4EA" }}>Edit</button>
+                  <button onClick={() => { setEditingId(c.id); setEditFee(c.fee); setEditDuration(c.duration_months); }} className="text-xs px-2 py-1 rounded border" style={{ borderColor: "#E2E4EA" }}>Edit</button>
                   <button onClick={() => removeCourse(c.id)} className="text-xs px-2 py-1 rounded border" style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}>Del</button>
                 </div>
               )}
@@ -556,7 +638,10 @@ function CoursesModal({ courses, onClose, onDone }) {
         <form onSubmit={handleAdd} className="space-y-2 border-t pt-4" style={{ borderColor: "#E2E4EA" }}>
           <p className="text-sm font-semibold">Naya Course Add Karo</p>
           <input required placeholder="Course ka naam" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} style={inputStyle} />
-          <input required type="number" placeholder="Fee (₹)" value={fee} onChange={(e) => setFee(e.target.value)} className={inputCls} style={inputStyle} />
+          <div className="flex gap-2">
+            <input required type="number" placeholder="Fee (₹)" value={fee} onChange={(e) => setFee(e.target.value)} className={inputCls} style={inputStyle} />
+            <input required type="number" placeholder="Duration (months)" value={duration} onChange={(e) => setDuration(e.target.value)} className={inputCls} style={inputStyle} />
+          </div>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Band Karo</button>
