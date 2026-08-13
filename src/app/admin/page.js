@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+import { generateReceiptPDF } from "@/lib/generateReceipt";
+
 function genReceiptNumber() {
   const rand = Math.floor(1000 + Math.random() * 9000);
   return `MJCA-${Date.now().toString().slice(-6)}${rand}`;
@@ -24,6 +26,8 @@ export default function AdminDashboard() {
   const [showEditStudent, setShowEditStudent] = useState(null);
   const [showAddPayment, setShowAddPayment] = useState(null);
   const [showCourses, setShowCourses] = useState(false);
+  const [showHistory, setShowHistory] = useState(null);
+  const [search, setSearch] = useState("");
   const [deleteBusyId, setDeleteBusyId] = useState(null);
   const [loadError, setLoadError] = useState("");
 
@@ -257,15 +261,24 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-3">
           <h2 className="font-display text-xl font-bold">Students</h2>
-          <button
-            onClick={() => setShowAddStudent(true)}
-            className="px-4 py-2 rounded-lg text-white text-sm font-semibold"
-            style={{ background: "var(--navy)" }}
-          >
-            + Add Student
-          </button>
+          <div className="flex items-center gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Naam ya code se search karo..."
+              className="text-sm border rounded-lg px-3 py-2 w-48"
+              style={{ borderColor: "#E2E4EA" }}
+            />
+            <button
+              onClick={() => setShowAddStudent(true)}
+              className="px-4 py-2 rounded-lg text-white text-sm font-semibold whitespace-nowrap"
+              style={{ background: "var(--navy)" }}
+            >
+              + Add Student
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -284,7 +297,16 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {students.map((s) => {
+                {students
+                  .filter((s) => {
+                    const q = search.trim().toLowerCase();
+                    if (!q) return true;
+                    return (
+                      s.full_name?.toLowerCase().includes(q) ||
+                      s.student_code?.toLowerCase().includes(q)
+                    );
+                  })
+                  .map((s) => {
                   const paid = totalPaidFor(s.id);
                   const fee = feeFor(s);
                   return (
@@ -299,6 +321,9 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1.5 justify-end">
+                          <button onClick={() => setShowHistory(s)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border" style={{ borderColor: "#E2E4EA" }}>
+                            History
+                          </button>
                           <button onClick={() => setShowAddPayment(s)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={{ background: "var(--gold-light)", color: "var(--navy)" }}>
                             + Payment
                           </button>
@@ -333,9 +358,77 @@ export default function AdminDashboard() {
       {showAddPayment && (
         <AddPaymentModal student={showAddPayment} onClose={() => setShowAddPayment(null)} onDone={async () => { setShowAddPayment(null); await loadData(); }} />
       )}
+      {showHistory && (
+        <StudentHistoryModal
+          student={showHistory}
+          payments={paymentsFor(showHistory.id)}
+          onClose={() => setShowHistory(null)}
+        />
+      )}
       {showCourses && (
         <CoursesModal courses={courses} onClose={() => setShowCourses(false)} onDone={async () => { await loadData(); }} />
       )}
+    </div>
+  );
+}
+
+function StudentHistoryModal({ student, payments, onClose }) {
+  const [monthFilter, setMonthFilter] = useState("");
+
+  const filtered = payments.filter((p) => {
+    if (!monthFilter) return true;
+    return p.payment_date?.slice(0, 7) === monthFilter;
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
+        <h3 className="font-display text-lg font-bold mb-1">Payment History</h3>
+        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>{student.full_name}</p>
+
+        <input
+          type="month"
+          value={monthFilter}
+          onChange={(e) => setMonthFilter(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm mb-4"
+          style={{ borderColor: "#E2E4EA" }}
+        />
+
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>Koi payment nahi mila.</p>
+          ) : (
+            filtered.map((p) => (
+              <div key={p.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
+                <div>
+                  <p className="text-sm font-semibold">
+                    ₹{Number(p.amount).toLocaleString("en-IN")}{" "}
+                    <span className="text-xs font-normal" style={{ color: p.status === "approved" ? "var(--success)" : "#946200" }}>
+                      ({p.status === "approved" ? "Approved" : "Pending"})
+                    </span>
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--muted)" }}>
+                    {new Date(p.payment_date).toLocaleDateString("en-IN")} • {p.payment_mode.replace("_", " ")} • {p.receipt_number}
+                  </p>
+                </div>
+                {p.status === "approved" && (
+                  <button
+                    onClick={async () => await generateReceiptPDF(p, student)}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                    style={{ background: "var(--gold-light)", color: "var(--navy)" }}
+                  >
+                    Download
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <button onClick={onClose} className="w-full mt-4 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>
+          Band Karo
+        </button>
+      </div>
     </div>
   );
 }
