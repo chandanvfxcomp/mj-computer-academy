@@ -442,6 +442,9 @@ function AddStudentModal({ courses, onClose, onDone }) {
   const [customFee, setCustomFee] = useState("");
   const [paymentPlan, setPaymentPlan] = useState("monthly");
   const [phone, setPhone] = useState("");
+  const [dob, setDob] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
+  const [batchTiming, setBatchTiming] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -452,7 +455,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
     const res = await fetch("/api/admin/create-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, password, phone, courseId, customFee, paymentPlan }),
+      body: JSON.stringify({ fullName, email, password, phone, courseId, customFee, paymentPlan, dob, guardianPhone, batchTiming }),
     });
     const result = await res.json();
     setBusy(false);
@@ -488,6 +491,12 @@ function AddStudentModal({ courses, onClose, onDone }) {
             </select>
           </div>
           <input placeholder="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Date of Birth (optional)</label>
+            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} style={inputStyle} />
+          </div>
+          <input placeholder="Parent/Guardian Number (optional)" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <input placeholder="Batch/Timing (e.g. Morning 9-11 AM)" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
           <p className="text-xs" style={{ color: "var(--muted)" }}>A unique Student Code will be generated automatically.</p>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-2">
@@ -509,6 +518,9 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   const [customFee, setCustomFee] = useState(student.custom_fee ?? "");
   const [paymentPlan, setPaymentPlan] = useState(student.payment_plan || "monthly");
   const [phone, setPhone] = useState(student.phone || "");
+  const [dob, setDob] = useState(student.date_of_birth || "");
+  const [guardianPhone, setGuardianPhone] = useState(student.guardian_phone || "");
+  const [batchTiming, setBatchTiming] = useState(student.batch_timing || "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -524,7 +536,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
     const res = await fetch("/api/admin/update-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, studentCode, phone, paymentPlan }),
+      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, studentCode, phone, paymentPlan, dob, guardianPhone, batchTiming }),
     });
     const result = await res.json();
     setBusy(false);
@@ -582,6 +594,12 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
           </div>
           <input placeholder="Student Code" value={studentCode} onChange={(e) => setStudentCode(e.target.value)} className={inputCls} style={inputStyle} />
           <input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Date of Birth</label>
+            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} style={inputStyle} />
+          </div>
+          <input placeholder="Parent/Guardian Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <input placeholder="Batch/Timing" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>

@@ -23,7 +23,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Sirf admin allowed hai" }, { status: 403 });
   }
 
-  const { fullName, email, password, phone, courseId, customFee, paymentPlan } = await request.json();
+  const { fullName, email, password, phone, courseId, customFee, paymentPlan, dob, guardianPhone, batchTiming } = await request.json();
 
   if (!fullName || !email || !password) {
     return NextResponse.json({ error: "Naam, email aur password required hai" }, { status: 400 });
@@ -67,6 +67,9 @@ export async function POST(request) {
       payment_plan: paymentPlan || "monthly",
       phone: phone || null,
       email: email,
+      date_of_birth: dob || null,
+      guardian_phone: guardianPhone || null,
+      batch_timing: batchTiming || null,
     })
     .eq("id", created.user.id);
 
