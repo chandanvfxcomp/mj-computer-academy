@@ -63,7 +63,7 @@ export default function StudentDashboard() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
-        <p style={{ color: "var(--muted)" }}>Load ho raha hai...</p>
+        <p style={{ color: "var(--muted)" }}>Loading...</p>
       </div>
     );
   }
@@ -95,14 +95,14 @@ export default function StudentDashboard() {
       <main className="max-w-2xl mx-auto px-4 py-8">
         {loadError && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-6">
-            Data load karne mein error hua: {loadError}
+            Error loading data: {loadError}
           </div>
         )}
 
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-sm" style={{ color: "var(--muted)" }}>Total Fee Jama</p>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>Total Fee Paid</p>
               <p className="font-display text-3xl font-bold mt-1" style={{ color: "var(--success)" }}>
                 ₹{totalPaid.toLocaleString("en-IN")}{totalFee != null && <span className="text-lg font-normal" style={{ color: "var(--muted)" }}> / ₹{totalFee.toLocaleString("en-IN")}</span>}
               </p>
@@ -112,17 +112,17 @@ export default function StudentDashboard() {
               className="text-sm font-semibold px-4 py-2 rounded-lg text-white shrink-0"
               style={{ background: "var(--navy)" }}
             >
-              Payment Karo
+              Make Payment
             </button>
           </div>
           <p className="text-xs" style={{ color: "var(--muted)" }}>
-            {profile?.courses?.name ? `Course: ${profile.courses.name}` : "Course abhi assign nahi hua"}
+            {profile?.courses?.name ? `Course: ${profile.courses.name}` : "No course assigned yet"}
             {profile?.student_code ? ` • Code: ${profile.student_code}` : ""}
             {totalFee != null ? ` • Plan: ${planLabel(plan)}` : ""}
           </p>
           {remaining != null && remaining > 0 && (
             <p className="text-xs mt-1 font-semibold" style={{ color: "var(--danger)" }}>
-              Baaki: ₹{remaining.toLocaleString("en-IN")} {inst && `• Agli Installment: ₹${nextDue.toLocaleString("en-IN")}`}
+              Balance Due: ₹{remaining.toLocaleString("en-IN")} {inst && `• Next Installment: ₹${nextDue.toLocaleString("en-IN")}`}
             </p>
           )}
         </div>
@@ -131,7 +131,7 @@ export default function StudentDashboard() {
 
         {payments.length === 0 ? (
           <div className="bg-white rounded-2xl p-6 text-center shadow-sm">
-            <p className="text-sm" style={{ color: "var(--muted)" }}>Abhi tak koi payment record nahi hai.</p>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>No payment records yet.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -163,7 +163,7 @@ export default function StudentDashboard() {
                     Download
                   </button>
                 ) : (
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>Approval baaki hai</span>
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>Awaiting Approval</span>
                 )}
               </div>
             ))}
@@ -198,7 +198,7 @@ function needsProof(mode) {
 function proofLabel(mode) {
   if (mode === "upi") return "UTR / Transaction ID";
   if (mode === "bank_transfer") return "Transaction Reference Number";
-  if (mode === "card") return "Transaction ID (last 4 digits ya poora)";
+  if (mode === "card") return "Transaction ID (last 4 digits or full)";
   return "Reference Number";
 }
 
@@ -217,11 +217,11 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
     setError("");
 
     if (needsProof(paymentMode) && !utrNumber.trim()) {
-      setError(`${proofLabel(paymentMode)} dena zaroori hai`);
+      setError(`${proofLabel(paymentMode)} is required`);
       return;
     }
     if (needsProof(paymentMode) && !screenshotFile) {
-      setError("Payment proof (screenshot/receipt photo) upload karna zaroori hai");
+      setError("Please upload a payment proof (screenshot/receipt photo)");
       return;
     }
 
@@ -232,7 +232,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
     let ocrMatched = null;
 
     if (needsProof(paymentMode) && screenshotFile) {
-      setStatusMsg("Proof verify ho raha hai...");
+      setStatusMsg("Verifying proof...");
       try {
         const Tesseract = (await import("tesseract.js")).default;
         const {
@@ -245,7 +245,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
         ocrMatched = null;
       }
 
-      setStatusMsg("Proof upload ho raha hai...");
+      setStatusMsg("Uploading proof...");
       const ext = screenshotFile.name.split(".").pop();
       const path = `${studentId}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
@@ -262,7 +262,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
       screenshotPath = path;
     }
 
-    setStatusMsg("Payment submit ho raha hai...");
+    setStatusMsg("Submitting payment...");
     const { error: insertError } = await supabase.from("payments").insert({
       student_id: studentId,
       amount: Number(amount),
@@ -287,9 +287,9 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-        <h3 className="font-display text-lg font-bold mb-1">Payment Submit Karo</h3>
+        <h3 className="font-display text-lg font-bold mb-1">Submit Payment</h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-          Ye admin approval ke baad confirm hoga.
+          This will be confirmed after admin approval.
         </p>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input required type="number" min="1" placeholder="Amount (₹)" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }} />
@@ -332,7 +332,7 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>
             <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>
-              {busy ? "Submit ho raha hai..." : "Submit Karo"}
+              {busy ? "Submitting..." : "Submit"}
             </button>
           </div>
         </form>

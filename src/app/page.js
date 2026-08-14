@@ -23,12 +23,11 @@ export default function LoginPage() {
     });
 
     if (signInError) {
-      setError("Email ya password galat hai. Dobara try karo.");
+      setError("Incorrect email or password. Please try again.");
       setLoading(false);
       return;
     }
 
-    // Server-side se role check karo (zyada reliable hai)
     const res = await fetch("/api/whoami");
     const { role } = await res.json();
 
@@ -93,11 +92,11 @@ export default function LoginPage() {
             className="w-full rounded-lg py-2.5 font-semibold text-white disabled:opacity-60"
             style={{ background: "var(--navy)" }}
           >
-            {loading ? "Login ho raha hai..." : "Login"}
+            {loading ? "Signing in..." : "Login"}
           </button>
 
           <p className="text-center text-sm mt-4" style={{ color: "var(--muted)" }}>
-            Login detail nahi mila? Academy office se sampark karo.
+            Don&apos;t have login details? Contact the academy office.
           </p>
         </form>
       </div>

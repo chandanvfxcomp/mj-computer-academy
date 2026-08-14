@@ -117,7 +117,7 @@ export default function AdminDashboard() {
   }
 
   async function handleDeleteStudent(student) {
-    if (!confirm(`${student.full_name} ko permanently delete karna hai? Ye undo nahi ho sakta.`)) return;
+    if (!confirm(`Permanently delete ${student.full_name}? This cannot be undone.`)) return;
     setDeleteBusyId(student.id);
     const res = await fetch("/api/admin/delete-student", {
       method: "POST",
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
     setDeleteBusyId(null);
     if (!res.ok) {
       const r = await res.json();
-      alert(r.error || "Delete nahi ho paya");
+      alert(r.error || "Delete failed");
       return;
     }
     await loadData();
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
-        <p style={{ color: "var(--muted)" }}>Load ho raha hai...</p>
+        <p style={{ color: "var(--muted)" }}>Loading...</p>
       </div>
     );
   }
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {loadError && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-6">
-            Data load karne mein error: {loadError}. Ho sakta hai database update abhi nahi hua ho — SQL migration check karo.
+            Error loading data: {loadError}. The database migration may not be applied yet — please check.
           </div>
         )}
 
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
         {/* Pending payments */}
         {pendingPayments.length > 0 && (
           <div className="mb-8">
-            <h2 className="font-display text-lg font-bold mb-3">Pending Payments (Approval Chahiye)</h2>
+            <h2 className="font-display text-lg font-bold mb-3">Pending Payments (Needs Approval)</h2>
             <div className="bg-white rounded-2xl shadow-sm divide-y">
               {pendingPayments.map((p) => (
                 <div key={p.id} className="p-4 flex items-start justify-between gap-3">
@@ -211,7 +211,7 @@ export default function AdminDashboard() {
                       )}
                       {(p.payment_mode === "upi" || p.payment_mode === "bank_transfer" || p.payment_mode === "card") && p.utr_number && (
                         <p className="text-xs mt-0.5 font-semibold" style={{ color: p.ocr_matched ? "var(--success)" : "var(--danger)" }}>
-                          {p.ocr_matched ? "✓ Screenshot mein reference match hua" : "⚠ Screenshot mein reference match nahi hua — khud check karo"}
+                          {p.ocr_matched ? "✓ Reference matched in screenshot" : "⚠ Reference not matched in screenshot — please verify manually"}
                         </p>
                       )}
                     </div>
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
         </div>
         <div className="bg-white rounded-2xl shadow-sm p-4 mb-8 flex flex-wrap gap-2">
           {courses.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--muted)" }}>Koi course nahi hai.</p>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>No courses yet.</p>
           ) : (
             courses.map((c) => (
               <span key={c.id} className="text-xs font-medium px-3 py-1.5 rounded-full" style={{ background: "var(--bg)", color: "var(--navy)" }}>
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Naam ya code se search karo..."
+              placeholder="Search by name or code..."
               className="text-sm border rounded-lg px-3 py-2 w-48"
               style={{ borderColor: "#E2E4EA" }}
             />
@@ -284,15 +284,15 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           {students.length === 0 ? (
             <p className="p-6 text-sm text-center" style={{ color: "var(--muted)" }}>
-              Abhi koi student nahi hai. &quot;Add Student&quot; se pehla student add karo.
+              No students yet. Use &quot;Add Student&quot; to add your first student.
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left border-b" style={{ color: "var(--muted)" }}>
-                  <th className="px-4 py-3">Naam</th>
+                  <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Course</th>
-                  <th className="px-4 py-3">Fee / Jama</th>
+                  <th className="px-4 py-3">Fee / Paid</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3">
                         <p className="font-medium">{s.full_name}</p>
                         <p className="text-xs" style={{ color: "var(--muted)" }}>{s.email || "—"}</p>
-                        <p className="text-xs" style={{ color: "var(--muted)" }}>{s.student_code || "code nahi diya"}</p>
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>{s.student_code || "no code"}</p>
                       </td>
                       <td className="px-4 py-3">{s.courses?.name || "—"}</td>
                       <td className="px-4 py-3">
@@ -397,7 +397,7 @@ function StudentHistoryModal({ student, payments, onClose }) {
 
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>Koi payment nahi mila.</p>
+            <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>No payments found.</p>
           ) : (
             filtered.map((p) => (
               <div key={p.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
@@ -427,7 +427,7 @@ function StudentHistoryModal({ student, payments, onClose }) {
         </div>
 
         <button onClick={onClose} className="w-full mt-4 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>
-          Band Karo
+          Close
         </button>
       </div>
     </div>
@@ -458,7 +458,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
     const result = await res.json();
     setBusy(false);
     if (!res.ok) {
-      setError(result.error || "Kuch galat ho gaya");
+      setError(result.error || "Something went wrong");
       return;
     }
     onDone();
@@ -467,18 +467,18 @@ function AddStudentModal({ courses, onClose, onDone }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-        <h3 className="font-display text-lg font-bold mb-4">Naya Student Add Karo</h3>
+        <h3 className="font-display text-lg font-bold mb-4">Add New Student</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input required placeholder="Poora Naam" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
+          <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
           <input required type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} />
-          <input required type="text" minLength={6} placeholder="Password (student ko dena)" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
+          <input required type="text" minLength={6} placeholder="Password (share with student)" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
           <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className={inputCls} style={inputStyle}>
-            <option value="">Course select karo (optional)</option>
+            <option value="">Select course (optional)</option>
             {courses.map((c) => (
               <option key={c.id} value={c.id}>{c.name} — ₹{Number(c.fee).toLocaleString("en-IN")}</option>
             ))}
           </select>
-          <input type="number" placeholder="Custom Fee / Offer (optional, override karega)" value={customFee} onChange={(e) => setCustomFee(e.target.value)} className={inputCls} style={inputStyle} />
+          <input type="number" placeholder="Custom Fee / Offer (optional, overrides course fee)" value={customFee} onChange={(e) => setCustomFee(e.target.value)} className={inputCls} style={inputStyle} />
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Payment Plan</label>
             <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls} style={inputStyle}>
@@ -494,7 +494,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>
             <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>
-              {busy ? "Add ho raha hai..." : "Add Karo"}
+              {busy ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
@@ -530,7 +530,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
     const result = await res.json();
     setBusy(false);
     if (!res.ok) {
-      setError(result.error || "Update nahi hua");
+      setError(result.error || "Update failed");
       return;
     }
     onDone();
@@ -552,7 +552,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
     const result = await res.json();
     setPwBusy(false);
     if (!res.ok) {
-      setPwError(result.error || "Reset nahi hua");
+      setPwError(result.error || "Reset failed");
       return;
     }
     setPwDone(true);
@@ -562,11 +562,11 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-        <h3 className="font-display text-lg font-bold mb-4">Student Edit Karo</h3>
+        <h3 className="font-display text-lg font-bold mb-4">Edit Student</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input required placeholder="Poora Naam" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
+          <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
           <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className={inputCls} style={inputStyle}>
-            <option value="">Course select karo</option>
+            <option value="">Select course</option>
             {courses.map((c) => (
               <option key={c.id} value={c.id}>{c.name} — ₹{Number(c.fee).toLocaleString("en-IN")}</option>
             ))}
@@ -587,19 +587,19 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>
             <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>
-              {busy ? "Save ho raha hai..." : "Save Karo"}
+              {busy ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
 
         <div className="mt-5 pt-4 border-t" style={{ borderColor: "#E2E4EA" }}>
-          <p className="text-sm font-semibold mb-2">Password Reset Karo</p>
-          <p className="text-xs mb-2" style={{ color: "var(--muted)" }}>Agar student password bhool gaya hai, yahan naya set kar do.</p>
+          <p className="text-sm font-semibold mb-2">Reset Password</p>
+          <p className="text-xs mb-2" style={{ color: "var(--muted)" }}>If a student forgets their password, set a new one here.</p>
           <div className="flex gap-2">
             <input
               type="text"
               minLength={6}
-              placeholder="Naya password"
+              placeholder="New password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="flex-1 border rounded-lg px-3 py-2 text-sm"
@@ -616,7 +616,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
             </button>
           </div>
           {pwError && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{pwError}</p>}
-          {pwDone && <p className="text-xs mt-1" style={{ color: "var(--success)" }}>Password reset ho gaya — student ko naya password de do.</p>}
+          {pwDone && <p className="text-xs mt-1" style={{ color: "var(--success)" }}>Password reset successfully — share the new password with the student.</p>}
         </div>
       </div>
     </div>
@@ -660,8 +660,8 @@ function AddPaymentModal({ student, onClose, onDone }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-        <h3 className="font-display text-lg font-bold mb-1">Payment Add Karo</h3>
-        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>{student.full_name} (admin entry — turant approved)</p>
+        <h3 className="font-display text-lg font-bold mb-1">Add Payment</h3>
+        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>{student.full_name} (admin entry — instantly approved)</p>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input required type="number" min="1" placeholder="Amount (₹)" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} style={inputStyle} />
           <input required type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className={inputCls} style={inputStyle} />
@@ -676,7 +676,7 @@ function AddPaymentModal({ student, onClose, onDone }) {
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>
             <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>
-              {busy ? "Save ho raha hai..." : "Save Karo"}
+              {busy ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
@@ -719,7 +719,7 @@ function CoursesModal({ courses, onClose, onDone }) {
   }
 
   async function removeCourse(courseId) {
-    if (!confirm("Ye course delete karna hai?")) return;
+    if (!confirm("Delete this course?")) return;
     await supabase.from("courses").delete().eq("id", courseId);
     onDone();
   }
@@ -727,7 +727,7 @@ function CoursesModal({ courses, onClose, onDone }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-        <h3 className="font-display text-lg font-bold mb-4">Courses Manage Karo</h3>
+        <h3 className="font-display text-lg font-bold mb-4">Manage Courses</h3>
         <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
           {courses.map((c) => (
             <div key={c.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
@@ -753,17 +753,17 @@ function CoursesModal({ courses, onClose, onDone }) {
         </div>
 
         <form onSubmit={handleAdd} className="space-y-2 border-t pt-4" style={{ borderColor: "#E2E4EA" }}>
-          <p className="text-sm font-semibold">Naya Course Add Karo</p>
-          <input required placeholder="Course ka naam" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} style={inputStyle} />
+          <p className="text-sm font-semibold">Add New Course</p>
+          <input required placeholder="Course name" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} style={inputStyle} />
           <div className="flex gap-2">
             <input required type="number" placeholder="Fee (₹)" value={fee} onChange={(e) => setFee(e.target.value)} className={inputCls} style={inputStyle} />
             <input required type="number" placeholder="Duration (months)" value={duration} onChange={(e) => setDuration(e.target.value)} className={inputCls} style={inputStyle} />
           </div>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Band Karo</button>
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Close</button>
             <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>
-              {busy ? "Add ho raha hai..." : "Add Karo"}
+              {busy ? "Adding..." : "Add"}
             </button>
           </div>
         </form>
