@@ -65,7 +65,9 @@ export async function POST(request) {
 
   const yearCode = new Date().getFullYear().toString().slice(-2);
   const initial = (fullName?.trim()?.[0] || "X").toUpperCase();
-  const seq = String(count || 1).padStart(4, "0");
+  // Total code length hamesha 11 characters rahegi, chahe prefix MJCA ho ya MJ
+  const seqDigits = 11 - prefix.length - yearCode.length - initial.length;
+  const seq = String(count || 1).padStart(seqDigits, "0");
   const studentCode = `${prefix}${yearCode}${initial}${seq}`;
 
   const { error: updateError } = await adminClient
