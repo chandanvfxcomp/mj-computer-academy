@@ -438,7 +438,6 @@ function AddStudentModal({ courses, onClose, onDone }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [studentCode, setStudentCode] = useState("");
   const [courseId, setCourseId] = useState("");
   const [customFee, setCustomFee] = useState("");
   const [paymentPlan, setPaymentPlan] = useState("monthly");
@@ -453,7 +452,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
     const res = await fetch("/api/admin/create-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, password, studentCode, phone, courseId, customFee, paymentPlan }),
+      body: JSON.stringify({ fullName, email, password, phone, courseId, customFee, paymentPlan }),
     });
     const result = await res.json();
     setBusy(false);
@@ -488,8 +487,8 @@ function AddStudentModal({ courses, onClose, onDone }) {
               <option value="one_time">One-Time (Full Payment)</option>
             </select>
           </div>
-          <input placeholder="Student Code (optional)" value={studentCode} onChange={(e) => setStudentCode(e.target.value)} className={inputCls} style={inputStyle} />
           <input placeholder="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <p className="text-xs" style={{ color: "var(--muted)" }}>A unique Student Code will be generated automatically.</p>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>

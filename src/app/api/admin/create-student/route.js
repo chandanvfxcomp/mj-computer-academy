@@ -23,7 +23,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Sirf admin allowed hai" }, { status: 403 });
   }
 
-  const { fullName, email, password, studentCode, phone, courseId, customFee, paymentPlan } = await request.json();
+  const { fullName, email, password, phone, courseId, customFee, paymentPlan } = await request.json();
 
   if (!fullName || !email || !password) {
     return NextResponse.json({ error: "Naam, email aur password required hai" }, { status: 400 });
@@ -47,10 +47,21 @@ export async function POST(request) {
   }
 
   // 3. Fill in the extra profile fields (the trigger already created the base row)
+  // Unique, professional student code generate karo: MJCA<year><naam ka pehla letter><4-digit number>
+  const { count } = await adminClient
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("role", "student");
+
+  const yearCode = new Date().getFullYear().toString().slice(-2);
+  const initial = (fullName?.trim()?.[0] || "X").toUpperCase();
+  const seq = String(count || 1).padStart(4, "0");
+  const studentCode = `MJCA${yearCode}${initial}${seq}`;
+
   const { error: updateError } = await adminClient
     .from("profiles")
     .update({
-      student_code: studentCode || null,
+      student_code: studentCode,
       course_id: courseId || null,
       custom_fee: customFee === "" || customFee == null ? null : Number(customFee),
       payment_plan: paymentPlan || "monthly",
