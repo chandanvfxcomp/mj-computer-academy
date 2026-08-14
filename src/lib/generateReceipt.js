@@ -117,10 +117,28 @@ export async function generateReceiptPDF(payment, student) {
     doc.text(`Notes: ${payment.notes}`, 40, 436);
   }
 
+  // Footer band
+  doc.setFillColor(246, 247, 250);
+  doc.rect(0, 730, 595, 112, "F");
+  doc.setDrawColor(...gold);
+  doc.setLineWidth(2);
+  doc.line(0, 730, 595, 730);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...navy);
+  doc.text("MJ Computer Academy", 297.5, 754, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...muted);
-  doc.text("MJ Computer Academy  •  Email: mjcomputeracademy@gmail.com  •  Phone: +91-8002991116, 8862977872", 40, 765);
-  doc.text("This is a system-generated receipt from MJ Computer Academy's fee portal.", 40, 780);
+  doc.text("mjcomputeracademy@gmail.com   |   +91 80029 91116, 88629 77872", 297.5, 770, { align: "center" });
+
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8);
+  doc.setTextColor(150, 155, 170);
+  doc.text("This is a system-generated receipt from MJ Computer Academy's fee portal.", 297.5, 786, { align: "center" });
+  doc.setFont("helvetica", "normal");
 
   doc.save(`Receipt-${payment.receipt_number}.pdf`);
 }
