@@ -47,16 +47,26 @@ export async function POST(request) {
   }
 
   // 3. Fill in the extra profile fields (the trigger already created the base row)
-  // Unique, professional student code generate karo: MJCA<year><naam ka pehla letter><4-digit number>
+  // Unique, professional student code generate karo: prefix<year><naam ka pehla letter><4-digit number>
   const { count } = await adminClient
     .from("profiles")
     .select("id", { count: "exact", head: true })
     .eq("role", "student");
 
+  let prefix = "MJ";
+  if (courseId) {
+    const { data: courseData } = await adminClient
+      .from("courses")
+      .select("category")
+      .eq("id", courseId)
+      .single();
+    prefix = courseData?.category === "academic" ? "MJ" : "MJCA";
+  }
+
   const yearCode = new Date().getFullYear().toString().slice(-2);
   const initial = (fullName?.trim()?.[0] || "X").toUpperCase();
   const seq = String(count || 1).padStart(4, "0");
-  const studentCode = `MJCA${yearCode}${initial}${seq}`;
+  const studentCode = `${prefix}${yearCode}${initial}${seq}`;
 
   const { error: updateError } = await adminClient
     .from("profiles")

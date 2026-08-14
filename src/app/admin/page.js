@@ -707,17 +707,19 @@ function CoursesModal({ courses, onClose, onDone }) {
   const [name, setName] = useState("");
   const [fee, setFee] = useState("");
   const [duration, setDuration] = useState("6");
+  const [category, setCategory] = useState("computer");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editFee, setEditFee] = useState("");
   const [editDuration, setEditDuration] = useState("");
+  const [editCategory, setEditCategory] = useState("computer");
 
   async function handleAdd(e) {
     e.preventDefault();
     setError("");
     setBusy(true);
-    const { error: err } = await supabase.from("courses").insert({ name, fee: Number(fee), duration_months: Number(duration) });
+    const { error: err } = await supabase.from("courses").insert({ name, fee: Number(fee), duration_months: Number(duration), category });
     setBusy(false);
     if (err) {
       setError(err.message);
@@ -726,11 +728,12 @@ function CoursesModal({ courses, onClose, onDone }) {
     setName("");
     setFee("");
     setDuration("6");
+    setCategory("computer");
     onDone();
   }
 
   async function saveFee(courseId) {
-    await supabase.from("courses").update({ fee: Number(editFee), duration_months: Number(editDuration) }).eq("id", courseId);
+    await supabase.from("courses").update({ fee: Number(editFee), duration_months: Number(editDuration), category: editCategory }).eq("id", courseId);
     setEditingId(null);
     onDone();
   }
@@ -750,18 +753,24 @@ function CoursesModal({ courses, onClose, onDone }) {
             <div key={c.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
               <div>
                 <span className="text-sm font-medium block">{c.name}</span>
-                <span className="text-xs" style={{ color: "var(--muted)" }}>{c.duration_months} months</span>
+                <span className="text-xs" style={{ color: "var(--muted)" }}>
+                  {c.duration_months} months • {c.category === "academic" ? "Academic (MJ code)" : "Computer (MJCA code)"}
+                </span>
               </div>
               {editingId === c.id ? (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap justify-end">
                   <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} placeholder="Fee" className="w-20 border rounded px-2 py-1 text-sm" style={inputStyle} />
                   <input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} placeholder="Months" className="w-16 border rounded px-2 py-1 text-sm" style={inputStyle} />
+                  <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="border rounded px-1 py-1 text-xs" style={inputStyle}>
+                    <option value="computer">Computer</option>
+                    <option value="academic">Academic</option>
+                  </select>
                   <button onClick={() => saveFee(c.id)} className="text-xs font-semibold px-2 py-1 rounded" style={{ background: "var(--success)", color: "white" }}>Save</button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">₹{Number(c.fee).toLocaleString("en-IN")}</span>
-                  <button onClick={() => { setEditingId(c.id); setEditFee(c.fee); setEditDuration(c.duration_months); }} className="text-xs px-2 py-1 rounded border" style={{ borderColor: "#E2E4EA" }}>Edit</button>
+                  <button onClick={() => { setEditingId(c.id); setEditFee(c.fee); setEditDuration(c.duration_months); setEditCategory(c.category || "computer"); }} className="text-xs px-2 py-1 rounded border" style={{ borderColor: "#E2E4EA" }}>Edit</button>
                   <button onClick={() => removeCourse(c.id)} className="text-xs px-2 py-1 rounded border" style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}>Del</button>
                 </div>
               )}
@@ -776,6 +785,10 @@ function CoursesModal({ courses, onClose, onDone }) {
             <input required type="number" placeholder="Fee (₹)" value={fee} onChange={(e) => setFee(e.target.value)} className={inputCls} style={inputStyle} />
             <input required type="number" placeholder="Duration (months)" value={duration} onChange={(e) => setDuration(e.target.value)} className={inputCls} style={inputStyle} />
           </div>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls} style={inputStyle}>
+            <option value="computer">Computer Course (code: MJCA...)</option>
+            <option value="academic">Academic Class (code: MJ...)</option>
+          </select>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Close</button>
