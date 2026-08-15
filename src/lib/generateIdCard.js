@@ -45,28 +45,29 @@ export async function generateIdCardPDF(student) {
 
   // ===== Header =====
   doc.setFillColor(...navy);
-  doc.rect(0, 0, W, 40, "F");
+  doc.rect(0, 0, W, 36, "F");
   doc.setFillColor(...gold);
-  doc.rect(0, 40, W, 2, "F");
+  doc.rect(0, 36, W, 2, "F");
 
   if (logoDataUrl) {
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect((W - 22) / 2, 4, 22, 22, 4, 4, "F");
-    doc.addImage(logoDataUrl, "PNG", (W - 19) / 2, 5.5, 19, 19);
+    doc.roundedRect(8, 8, 20, 20, 4, 4, "F");
+    doc.addImage(logoDataUrl, "PNG", 9.5, 9.5, 17, 17);
   }
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.text("MJ COMPUTER ACADEMY", W / 2, 32, { align: "center" });
+  doc.setFontSize(6.6);
+  doc.text("MJ COMPUTER", 34, 17);
+  doc.text("ACADEMY", 34, 25);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(4.8);
+  doc.setFontSize(4.6);
   doc.setTextColor(228, 197, 120);
-  doc.text("STUDENT IDENTITY CARD", W / 2, 38, { align: "center" });
+  doc.text("STUDENT IDENTITY CARD", 34, 32);
 
   // ===== Photo =====
   const photoSize = 72;
   const photoX = (W - photoSize) / 2;
-  const photoY = 52;
+  const photoY = 48;
 
   doc.setFillColor(...lightBg);
   doc.roundedRect(photoX - 3, photoY - 3, photoSize + 6, photoSize + 6, 6, 6, "F");
