@@ -736,9 +736,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
             ))}
           </select>
           <input type="number" placeholder="Custom Fee / Offer (optional, overrides course fee)" value={customFee} onChange={(e) => setCustomFee(e.target.value)} className={inputCls} style={inputStyle} />
-          {customFee && (
-            <input type="number" placeholder="Fee Duration in months (for installment split)" value={customDuration} onChange={(e) => setCustomDuration(e.target.value)} className={inputCls} style={inputStyle} />
-          )}
+          <input type="number" placeholder="Installment Duration Override (months, optional)" value={customDuration} onChange={(e) => setCustomDuration(e.target.value)} className={inputCls} style={inputStyle} />
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Payment Plan</label>
             <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls} style={inputStyle}>
@@ -864,9 +862,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
             ))}
           </select>
           <input type="number" placeholder="Custom Fee / Offer (optional)" value={customFee} onChange={(e) => setCustomFee(e.target.value)} className={inputCls} style={inputStyle} />
-          {customFee && (
-            <input type="number" placeholder="Fee Duration in months (for installment split)" value={customDuration} onChange={(e) => setCustomDuration(e.target.value)} className={inputCls} style={inputStyle} />
-          )}
+          <input type="number" placeholder="Installment Duration Override (months, optional)" value={customDuration} onChange={(e) => setCustomDuration(e.target.value)} className={inputCls} style={inputStyle} />
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Payment Plan</label>
             <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls} style={inputStyle}>
