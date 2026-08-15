@@ -518,7 +518,7 @@ function StaffModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start sm:items-center justify-center px-4 z-50 overflow-y-auto py-8">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md">
         <h3 className="font-display text-lg font-bold mb-1">Manage Staff</h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
@@ -587,7 +587,7 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start sm:items-center justify-center px-4 z-50 overflow-y-auto py-8">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
         <h3 className="font-display text-lg font-bold mb-1">Payment History</h3>
         <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>{student.full_name}</p>
@@ -718,7 +718,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start sm:items-center justify-center px-4 z-50 overflow-y-auto py-8">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-display text-lg font-bold mb-4">Add New Student</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -844,7 +844,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start sm:items-center justify-center px-4 z-50 overflow-y-auto py-8">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-display text-lg font-bold mb-4">Edit Student</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -1026,7 +1026,7 @@ function CoursesModal({ courses, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start sm:items-center justify-center px-4 z-50 overflow-y-auto py-8">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md">
         <h3 className="font-display text-lg font-bold mb-4">Manage Courses</h3>
         <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
