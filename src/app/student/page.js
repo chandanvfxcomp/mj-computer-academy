@@ -174,7 +174,7 @@ export default function StudentDashboard() {
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {profile?.student_code || "-"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Course:</span> {profile?.courses?.name || "-"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Email:</span> {profile?.email || "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Phone:</span> {profile?.phone || "-"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Mobile No.:</span> {profile?.phone || "-"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString("en-IN") : "-"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {profile?.guardian_phone || "-"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {profile?.batch_timing || "-"}</p>

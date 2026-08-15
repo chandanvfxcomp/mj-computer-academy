@@ -79,7 +79,7 @@ export async function generateReceiptPDF(payment, student) {
   doc.text(`Student Code: ${student.student_code || "-"}`, 40, 248);
   doc.text(`Course: ${student.courses?.name || student.course || "-"}`, 40, 266);
   doc.text(`Email: ${student.email || "-"}`, 320, 230);
-  doc.text(`Phone: ${student.phone || "-"}`, 320, 248);
+  doc.text(`Mobile No.: ${student.phone || "-"}`, 320, 248);
 
   // Payment table
   doc.setDrawColor(226, 228, 234);

@@ -74,7 +74,7 @@ export async function generateIdCardPDF(student) {
   doc.text(`Code: ${student.student_code || "-"}`, 78, 70);
   doc.text(`Course: ${student.courses?.name || "-"}`, 78, 81);
   doc.text(`Batch: ${student.batch_timing || "-"}`, 78, 92);
-  doc.text(`Phone: ${student.phone || "-"}`, 78, 103);
+  doc.text(`Mobile No.: ${student.phone || "-"}`, 78, 103);
 
   // QR code
   doc.addImage(qrDataUrl, "PNG", 190, 55, 42, 42);

@@ -596,7 +596,7 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {student.student_code || "-"}</p>
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Course:</span> {student.courses?.name || "-"}</p>
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Email:</span> {student.email || "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Phone:</span> {student.phone || "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Mobile No.:</span> {student.phone || "-"}</p>
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "-"}</p>
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {student.guardian_phone || "-"}</p>
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {student.batch_timing || "-"}</p>
@@ -740,12 +740,12 @@ function AddStudentModal({ courses, onClose, onDone }) {
               <option value="one_time">One-Time (Full Payment)</option>
             </select>
           </div>
-          <input placeholder="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Mobile No. (optional)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Date of Birth (optional)</label>
             <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} style={inputStyle} />
           </div>
-          <input placeholder="Parent/Guardian Number (optional)" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Parent/Guardian Number (optional)" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <input placeholder="Batch/Timing (e.g. Morning 9-11 AM)" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>Photo (optional, for ID card)</label>
@@ -860,12 +860,12 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
             </select>
           </div>
           <input placeholder="Student Code" value={studentCode} onChange={(e) => setStudentCode(e.target.value)} className={inputCls} style={inputStyle} />
-          <input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Mobile No." value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Date of Birth</label>
             <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} style={inputStyle} />
           </div>
-          <input placeholder="Parent/Guardian Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} className={inputCls} style={inputStyle} />
+          <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Parent/Guardian Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <input placeholder="Batch/Timing" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>Update Photo (optional)</label>
