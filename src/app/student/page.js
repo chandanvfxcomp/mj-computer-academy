@@ -347,7 +347,21 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
           This will be confirmed after admin approval.
         </p>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input required type="number" min="1" placeholder="Amount (₹)" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }} />
+          {suggestedAmount && suggestedAmount > 0 ? (
+            <div>
+              <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>
+                Installment Amount (fixed)
+              </label>
+              <div
+                className="w-full border rounded-lg px-3 py-2 font-semibold"
+                style={{ borderColor: "#E2E4EA", background: "var(--bg)", color: "var(--navy)" }}
+              >
+                ₹{Number(amount).toLocaleString("en-IN")}
+              </div>
+            </div>
+          ) : (
+            <input required type="number" min="1" placeholder="Amount (₹)" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }} />
+          )}
           <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
             <option value="cash">Cash</option>
             <option value="upi">UPI</option>
