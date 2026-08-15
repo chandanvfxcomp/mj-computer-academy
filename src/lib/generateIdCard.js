@@ -38,7 +38,7 @@ export async function generateIdCardPDF(student) {
   const muted = [92, 100, 120];
   const lightBg = [246, 247, 250];
 
-  const admissionDate = student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN") : "-";
+  const admissionDate = student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-";
   const qrPayload = [
     `Name: ${student.full_name || "-"}`,
     `Code: ${student.student_code || "-"}`,

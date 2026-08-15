@@ -182,7 +182,7 @@ export default function StudentDashboard() {
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString("en-IN") : "-"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {profile?.guardian_phone || "-"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {profile?.batch_timing || "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {profile?.joining_date ? new Date(profile.joining_date).toLocaleDateString("en-IN") : "-"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {profile?.joining_date ? new Date(profile.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}</p>
           </div>
         </div>
 

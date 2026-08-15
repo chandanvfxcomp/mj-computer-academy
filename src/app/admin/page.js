@@ -603,7 +603,7 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "-"}</p>
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {student.guardian_phone || "-"}</p>
           <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {student.batch_timing || "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN") : "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}</p>
         </div>
 
         <input
