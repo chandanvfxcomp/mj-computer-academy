@@ -134,17 +134,29 @@ export async function generateIdCardPDF(student) {
   doc.addImage(qrDataUrl, "PNG", 11, H - footerH + 12, qrSize, qrSize);
 
   const textX = 9 + qrSize + 4 + 8;
+  const availWidth = W - textX - 6;
+
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(6.2);
+  doc.setFontSize(6);
   doc.setTextColor(...gold);
-  doc.text("ACADEMY CONTACT", textX, H - footerH + 18);
+  doc.text("ACADEMY CONTACT", textX, H - footerH + 15);
+
+  // Email — auto-shrink font so it always fits on one line
+  const emailText = "mjcomputeracademy@gmail.com";
+  let emailSize = 6;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(5.8);
+  doc.setFontSize(emailSize);
+  while (doc.getTextWidth(emailText) > availWidth && emailSize > 3.8) {
+    emailSize -= 0.2;
+    doc.setFontSize(emailSize);
+  }
   doc.setTextColor(255, 255, 255);
-  doc.text("mjcomputer", textX, H - footerH + 29);
-  doc.text("academy@gmail.com", textX, H - footerH + 37);
+  doc.text(emailText, textX, H - footerH + 25);
+
+  doc.setFontSize(5.6);
   doc.setTextColor(228, 197, 120);
-  doc.text("+91 80029 91116", textX, H - footerH + 48);
+  doc.text("+91 80029 91116", textX, H - footerH + 35);
+  doc.text("+91 88629 77872", textX, H - footerH + 45);
 
   doc.save(`ID-Card-${student.student_code || student.full_name}.pdf`);
 }
