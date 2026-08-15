@@ -18,7 +18,7 @@ async function loadImageDataUrl(url) {
 
 export async function generateIdCardPDF(student) {
   const W = 165;
-  const H = 280;
+  const H = 340;
   const doc = new jsPDF({ unit: "pt", format: [W, H] });
   const navy = [16, 27, 52];
   const gold = [200, 155, 60];
@@ -50,7 +50,9 @@ export async function generateIdCardPDF(student) {
   doc.rect(0, 58, W, 2.5, "F");
 
   if (logoDataUrl) {
-    doc.addImage(logoDataUrl, "PNG", (W - 28) / 2, 7, 28, 28);
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect((W - 32) / 2, 6, 32, 32, 5, 5, "F");
+    doc.addImage(logoDataUrl, "PNG", (W - 28) / 2, 8, 28, 28);
   }
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
@@ -108,7 +110,7 @@ export async function generateIdCardPDF(student) {
   doc.setFontSize(7.3);
   const rows = [["Mobile", student.phone || "-"]];
   if (student.email) rows.push(["Email", student.email]);
-  rows.push(["Admission Date", admissionDate]);
+  rows.push(["Admission", admissionDate]);
 
   rows.forEach(([label, value]) => {
     doc.setFont("helvetica", "bold");

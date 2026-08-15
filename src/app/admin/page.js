@@ -682,6 +682,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
   const [dob, setDob] = useState("");
   const [guardianPhone, setGuardianPhone] = useState("");
   const [batchTiming, setBatchTiming] = useState("");
+  const [admissionDate, setAdmissionDate] = useState(new Date().toISOString().slice(0, 10));
   const [photoFile, setPhotoFile] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -693,7 +694,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
     const res = await fetch("/api/admin/create-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, password, phone, courseId, customFee, paymentPlan, dob, guardianPhone, batchTiming }),
+      body: JSON.stringify({ fullName, email, password, phone, courseId, customFee, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
     });
     const result = await res.json();
     if (!res.ok) {
@@ -748,6 +749,10 @@ function AddStudentModal({ courses, onClose, onDone }) {
           <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Parent/Guardian Number (optional)" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <input placeholder="Batch/Timing (e.g. Morning 9-11 AM)" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
           <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Admission Date</label>
+            <input type="date" value={admissionDate} onChange={(e) => setAdmissionDate(e.target.value)} className={inputCls} style={inputStyle} />
+          </div>
+          <div>
             <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>Photo (optional, for ID card)</label>
             <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} className={inputCls + " text-sm"} style={inputStyle} />
           </div>
@@ -776,6 +781,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   const [dob, setDob] = useState(student.date_of_birth || "");
   const [guardianPhone, setGuardianPhone] = useState(student.guardian_phone || "");
   const [batchTiming, setBatchTiming] = useState(student.batch_timing || "");
+  const [admissionDate, setAdmissionDate] = useState(student.joining_date || "");
   const [photoFile, setPhotoFile] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -792,7 +798,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
     const res = await fetch("/api/admin/update-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, studentCode, phone, paymentPlan, dob, guardianPhone, batchTiming }),
+      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, studentCode, phone, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
     });
     const result = await res.json();
     if (!res.ok) {
@@ -867,6 +873,10 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
           </div>
           <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Parent/Guardian Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <input placeholder="Batch/Timing" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Admission Date</label>
+            <input type="date" value={admissionDate} onChange={(e) => setAdmissionDate(e.target.value)} className={inputCls} style={inputStyle} />
+          </div>
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>Update Photo (optional)</label>
             <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} className={inputCls + " text-sm"} style={inputStyle} />
