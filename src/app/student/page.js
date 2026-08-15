@@ -264,6 +264,7 @@ function proofLabel(mode) {
 function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
   const supabase = createClient();
   const [amount, setAmount] = useState(suggestedAmount && suggestedAmount > 0 ? String(suggestedAmount) : "");
+  const [editingAmount, setEditingAmount] = useState(false);
   const [paymentMode, setPaymentMode] = useState("cash");
   const [utrNumber, setUtrNumber] = useState("");
   const [screenshotFile, setScreenshotFile] = useState(null);
@@ -351,20 +352,28 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
           This will be confirmed after admin approval.
         </p>
         <form onSubmit={handleSubmit} className="space-y-3">
-          {suggestedAmount && suggestedAmount > 0 ? (
+          {suggestedAmount && suggestedAmount > 0 && !editingAmount ? (
             <div>
               <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>
-                Installment Amount (fixed)
+                Installment Amount
               </label>
               <div
-                className="w-full border rounded-lg px-3 py-2 font-semibold"
+                className="w-full border rounded-lg px-3 py-2 font-semibold flex items-center justify-between"
                 style={{ borderColor: "#E2E4EA", background: "var(--bg)", color: "var(--navy)" }}
               >
-                ₹{Number(amount).toLocaleString("en-IN")}
+                <span>₹{Number(amount).toLocaleString("en-IN")}</span>
+                <button
+                  type="button"
+                  onClick={() => setEditingAmount(true)}
+                  className="text-xs font-semibold underline"
+                  style={{ color: "var(--muted)" }}
+                >
+                  Change Amount
+                </button>
               </div>
             </div>
           ) : (
-            <input required type="number" min="1" placeholder="Amount (₹)" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }} />
+            <input required autoFocus={editingAmount} type="number" min="1" placeholder="Amount (₹)" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }} />
           )}
           <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} className="w-full border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
             <option value="cash">Cash</option>
