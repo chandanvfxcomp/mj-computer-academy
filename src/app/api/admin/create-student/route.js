@@ -96,5 +96,5 @@ export async function POST(request) {
     return NextResponse.json({ error: updateError.message }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, studentId: created.user.id });
 }

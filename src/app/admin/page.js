@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 import { generateReceiptPDF } from "@/lib/generateReceipt";
+import { generateIdCardPDF } from "@/lib/generateIdCard";
+import { getNextDueDate } from "@/lib/dueDate";
 
 function genReceiptNumber() {
   const rand = Math.floor(1000 + Math.random() * 9000);
@@ -30,6 +32,9 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [deleteBusyId, setDeleteBusyId] = useState(null);
   const [loadError, setLoadError] = useState("");
+  const [myRole, setMyRole] = useState(null);
+  const [showStaff, setShowStaff] = useState(false);
+  const isAdmin = myRole === "admin";
 
   const loadData = useCallback(async () => {
     setLoadError("");
@@ -58,10 +63,11 @@ export default function AdminDashboard() {
       }
       const res = await fetch("/api/whoami");
       const { role } = await res.json();
-      if (role !== "admin") {
+      if (role !== "admin" && role !== "staff") {
         router.push("/student");
         return;
       }
+      setMyRole(role);
       await loadData();
       setChecking(false);
     }
@@ -92,6 +98,27 @@ export default function AdminDashboard() {
   const pendingPayments = payments
     .filter((p) => p.status === "pending")
     .map((p) => ({ ...p, student: students.find((s) => s.id === p.student_id) }));
+
+  const overdueStudents = students
+    .map((s) => {
+      const fee = feeFor(s);
+      const paid = totalPaidFor(s.id);
+      const remaining = fee != null ? Math.max(fee - paid, 0) : null;
+      if (!remaining || remaining <= 0) return null;
+      const approved = paymentsFor(s.id).filter((p) => p.status === "approved");
+      const dueDate = getNextDueDate(s, approved);
+      if (!dueDate || dueDate >= new Date()) return null;
+      const daysOverdue = Math.floor((new Date() - dueDate) / (1000 * 60 * 60 * 24));
+      return { student: s, remaining, dueDate, daysOverdue };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.daysOverdue - a.daysOverdue);
+
+  function whatsappLink(student, remaining) {
+    const phone = (student.phone || "").replace(/\D/g, "");
+    const msg = `Hi ${student.full_name}, this is a reminder from MJ Computer Academy that your fee payment of ₹${remaining.toLocaleString("en-IN")} is due. Please pay at your earliest convenience. Thank you!`;
+    return `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`;
+  }
 
   const totalCollected = payments
     .filter((p) => p.status === "approved")
@@ -238,16 +265,59 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Overdue students */}
+        {overdueStudents.length > 0 && (
+          <div className="mb-8">
+            <h2 className="font-display text-lg font-bold mb-3" style={{ color: "var(--danger)" }}>Overdue Fee Payments</h2>
+            <div className="bg-white rounded-2xl shadow-sm divide-y">
+              {overdueStudents.map(({ student, remaining, daysOverdue }) => (
+                <div key={student.id} className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{student.full_name}</p>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>
+                      ₹{remaining.toLocaleString("en-IN")} due • {daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue
+                    </p>
+                  </div>
+                  {student.phone ? (
+                    <a
+                      href={whatsappLink(student, remaining)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm font-semibold px-3 py-1.5 rounded-lg text-white"
+                      style={{ background: "#25D366" }}
+                    >
+                      WhatsApp
+                    </a>
+                  ) : (
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>No phone number</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Courses */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display text-lg font-bold">Courses</h2>
-          <button
-            onClick={() => setShowCourses(true)}
-            className="text-sm font-semibold px-3 py-1.5 rounded-lg"
-            style={{ background: "var(--gold-light)", color: "var(--navy)" }}
-          >
-            Manage Courses
-          </button>
+          {isAdmin && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowStaff(true)}
+                className="text-sm font-semibold px-3 py-1.5 rounded-lg border"
+                style={{ borderColor: "#E2E4EA" }}
+              >
+                Manage Staff
+              </button>
+              <button
+                onClick={() => setShowCourses(true)}
+                className="text-sm font-semibold px-3 py-1.5 rounded-lg"
+                style={{ background: "var(--gold-light)", color: "var(--navy)" }}
+              >
+                Manage Courses
+              </button>
+            </div>
+          )}
         </div>
         <div className="bg-white rounded-2xl shadow-sm p-4 mb-8 flex flex-wrap gap-2">
           {courses.length === 0 ? (
@@ -271,13 +341,15 @@ export default function AdminDashboard() {
               className="text-sm border rounded-lg px-3 py-2 w-48"
               style={{ borderColor: "#E2E4EA" }}
             />
-            <button
-              onClick={() => setShowAddStudent(true)}
-              className="px-4 py-2 rounded-lg text-white text-sm font-semibold whitespace-nowrap"
-              style={{ background: "var(--navy)" }}
-            >
-              + Add Student
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAddStudent(true)}
+                className="px-4 py-2 rounded-lg text-white text-sm font-semibold whitespace-nowrap"
+                style={{ background: "var(--navy)" }}
+              >
+                + Add Student
+              </button>
+            )}
           </div>
         </div>
 
@@ -330,17 +402,24 @@ export default function AdminDashboard() {
                           <button onClick={() => setShowAddPayment(s)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={{ background: "var(--gold-light)", color: "var(--navy)" }}>
                             + Payment
                           </button>
-                          <button onClick={() => setShowEditStudent(s)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border" style={{ borderColor: "#E2E4EA" }}>
-                            Edit
+                          <button onClick={async () => await generateIdCardPDF(s)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border" style={{ borderColor: "#E2E4EA" }}>
+                            ID Card
                           </button>
-                          <button
-                            onClick={() => handleDeleteStudent(s)}
-                            disabled={deleteBusyId === s.id}
-                            className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border disabled:opacity-50"
-                            style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}
-                          >
-                            {deleteBusyId === s.id ? "..." : "Delete"}
-                          </button>
+                          {isAdmin && (
+                            <>
+                              <button onClick={() => setShowEditStudent(s)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border" style={{ borderColor: "#E2E4EA" }}>
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteStudent(s)}
+                                disabled={deleteBusyId === s.id}
+                                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border disabled:opacity-50"
+                                style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}
+                              >
+                                {deleteBusyId === s.id ? "..." : "Delete"}
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -372,6 +451,119 @@ export default function AdminDashboard() {
       {showCourses && (
         <CoursesModal courses={courses} onClose={() => setShowCourses(false)} onDone={async () => { await loadData(); }} />
       )}
+      {showStaff && (
+        <StaffModal onClose={() => setShowStaff(false)} />
+      )}
+    </div>
+  );
+}
+
+function StaffModal({ onClose }) {
+  const supabase = createClient();
+  const [staffList, setStaffList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [deleteBusyId, setDeleteBusyId] = useState(null);
+
+  const loadStaff = useCallback(async () => {
+    const { data } = await supabase.from("profiles").select("*").eq("role", "staff").order("created_at", { ascending: false });
+    setStaffList(data || []);
+    setLoading(false);
+  }, [supabase]);
+
+  useEffect(() => {
+    loadStaff();
+  }, [loadStaff]);
+
+  async function handleAdd(e) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+    const res = await fetch("/api/admin/create-staff", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName, email, password }),
+    });
+    const result = await res.json();
+    setBusy(false);
+    if (!res.ok) {
+      setError(result.error || "Something went wrong");
+      return;
+    }
+    setFullName("");
+    setEmail("");
+    setPassword("");
+    await loadStaff();
+  }
+
+  async function removeStaff(staffId) {
+    if (!confirm("Remove this staff account? They will no longer be able to log in.")) return;
+    setDeleteBusyId(staffId);
+    const res = await fetch("/api/admin/delete-student", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentId: staffId }),
+    });
+    setDeleteBusyId(null);
+    if (!res.ok) {
+      const r = await res.json();
+      alert(r.error || "Could not remove");
+      return;
+    }
+    await loadStaff();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+        <h3 className="font-display text-lg font-bold mb-1">Manage Staff</h3>
+        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
+          Staff (e.g. receptionist) can view students, add and approve payments — but cannot add/edit/delete students, manage courses, or reset passwords.
+        </p>
+
+        <div className="space-y-2 mb-4 max-h-52 overflow-y-auto">
+          {loading ? (
+            <p className="text-sm" style={{ color: "var(--muted)" }}>Loading...</p>
+          ) : staffList.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--muted)" }}>No staff accounts yet.</p>
+          ) : (
+            staffList.map((st) => (
+              <div key={st.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
+                <div>
+                  <p className="text-sm font-medium">{st.full_name}</p>
+                  <p className="text-xs" style={{ color: "var(--muted)" }}>{st.email}</p>
+                </div>
+                <button
+                  onClick={() => removeStaff(st.id)}
+                  disabled={deleteBusyId === st.id}
+                  className="text-xs px-2 py-1 rounded border disabled:opacity-50"
+                  style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}
+                >
+                  {deleteBusyId === st.id ? "..." : "Remove"}
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        <form onSubmit={handleAdd} className="space-y-2 border-t pt-4" style={{ borderColor: "#E2E4EA" }}>
+          <p className="text-sm font-semibold">Add New Staff</p>
+          <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
+          <input required type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} />
+          <input required type="text" minLength={6} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
+          {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Close</button>
+            <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>
+              {busy ? "Adding..." : "Add Staff"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -479,6 +671,7 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
 }
 
 function AddStudentModal({ courses, onClose, onDone }) {
+  const supabase = createClient();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -489,6 +682,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
   const [dob, setDob] = useState("");
   const [guardianPhone, setGuardianPhone] = useState("");
   const [batchTiming, setBatchTiming] = useState("");
+  const [photoFile, setPhotoFile] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -502,11 +696,23 @@ function AddStudentModal({ courses, onClose, onDone }) {
       body: JSON.stringify({ fullName, email, password, phone, courseId, customFee, paymentPlan, dob, guardianPhone, batchTiming }),
     });
     const result = await res.json();
-    setBusy(false);
     if (!res.ok) {
+      setBusy(false);
       setError(result.error || "Something went wrong");
       return;
     }
+
+    if (photoFile && result.studentId) {
+      const ext = photoFile.name.split(".").pop();
+      const path = `${result.studentId}/photo.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("student-photos").upload(path, photoFile, { upsert: true });
+      if (!uploadError) {
+        const { data: pub } = supabase.storage.from("student-photos").getPublicUrl(path);
+        await supabase.from("profiles").update({ photo_url: pub.publicUrl }).eq("id", result.studentId);
+      }
+    }
+
+    setBusy(false);
     onDone();
   }
 
@@ -541,6 +747,10 @@ function AddStudentModal({ courses, onClose, onDone }) {
           </div>
           <input placeholder="Parent/Guardian Number (optional)" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} className={inputCls} style={inputStyle} />
           <input placeholder="Batch/Timing (e.g. Morning 9-11 AM)" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>Photo (optional, for ID card)</label>
+            <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} className={inputCls + " text-sm"} style={inputStyle} />
+          </div>
           <p className="text-xs" style={{ color: "var(--muted)" }}>A unique Student Code will be generated automatically.</p>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-2">
@@ -556,6 +766,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
 }
 
 function EditStudentModal({ student, courses, onClose, onDone }) {
+  const supabase = createClient();
   const [fullName, setFullName] = useState(student.full_name || "");
   const [studentCode, setStudentCode] = useState(student.student_code || "");
   const [courseId, setCourseId] = useState(student.course_id || "");
@@ -565,6 +776,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   const [dob, setDob] = useState(student.date_of_birth || "");
   const [guardianPhone, setGuardianPhone] = useState(student.guardian_phone || "");
   const [batchTiming, setBatchTiming] = useState(student.batch_timing || "");
+  const [photoFile, setPhotoFile] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -583,11 +795,22 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
       body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, studentCode, phone, paymentPlan, dob, guardianPhone, batchTiming }),
     });
     const result = await res.json();
-    setBusy(false);
     if (!res.ok) {
+      setBusy(false);
       setError(result.error || "Update failed");
       return;
     }
+
+    if (photoFile) {
+      const ext = photoFile.name.split(".").pop();
+      const path = `${student.id}/photo.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("student-photos").upload(path, photoFile, { upsert: true });
+      if (!uploadError) {
+        const { data: pub } = supabase.storage.from("student-photos").getPublicUrl(path);
+        await supabase.from("profiles").update({ photo_url: pub.publicUrl }).eq("id", student.id);
+      }
+    }
+    setBusy(false);
     onDone();
   }
 
@@ -644,6 +867,10 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
           </div>
           <input placeholder="Parent/Guardian Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} className={inputCls} style={inputStyle} />
           <input placeholder="Batch/Timing" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted)" }}>Update Photo (optional)</label>
+            <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} className={inputCls + " text-sm"} style={inputStyle} />
+          </div>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>
