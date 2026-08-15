@@ -22,7 +22,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Only the admin can add staff accounts" }, { status: 403 });
   }
 
-  const { fullName, email, password } = await request.json();
+  const { fullName, email, phone, password } = await request.json();
   if (!fullName || !email || !password) {
     return NextResponse.json({ error: "Name, email and password are required" }, { status: 400 });
   }
@@ -45,7 +45,7 @@ export async function POST(request) {
 
   const { error: updateError } = await adminClient
     .from("profiles")
-    .update({ role: "staff", email })
+    .update({ role: "staff", email, phone: phone || null })
     .eq("id", created.user.id);
 
   if (updateError) {

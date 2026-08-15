@@ -464,6 +464,7 @@ function StaffModal({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -486,7 +487,7 @@ function StaffModal({ onClose }) {
     const res = await fetch("/api/admin/create-staff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, password }),
+      body: JSON.stringify({ fullName, email, phone, password }),
     });
     const result = await res.json();
     setBusy(false);
@@ -496,6 +497,7 @@ function StaffModal({ onClose }) {
     }
     setFullName("");
     setEmail("");
+    setPhone("");
     setPassword("");
     await loadStaff();
   }
@@ -554,6 +556,7 @@ function StaffModal({ onClose }) {
           <p className="text-sm font-semibold">Add New Staff</p>
           <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
           <input required type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} />
+          <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Mobile No. (optional)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <input required type="text" minLength={6} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-1">

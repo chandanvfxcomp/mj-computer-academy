@@ -44,7 +44,7 @@ export default function LoginPage() {
     const res = await fetch("/api/whoami");
     const { role } = await res.json();
 
-    if (role === "admin") {
+    if (role === "admin" || role === "staff") {
       window.location.href = "/admin";
     } else {
       window.location.href = "/student";
