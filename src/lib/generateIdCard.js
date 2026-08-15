@@ -1,19 +1,32 @@
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
 
-async function loadImageDataUrl(url) {
-  if (!url) return null;
-  try {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
+function loadImageResized(url, maxDim = 200, quality = 0.75) {
+  return new Promise((resolve) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > height && width > maxDim) {
+        height = Math.round(height * (maxDim / width));
+        width = maxDim;
+      } else if (height >= width && height > maxDim) {
+        width = Math.round(width * (maxDim / height));
+        height = maxDim;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
 }
 
 export async function generateIdCardPDF(student) {
@@ -38,8 +51,8 @@ export async function generateIdCardPDF(student) {
   ].join("\n");
 
   const [logoDataUrl, photoDataUrl, qrDataUrl] = await Promise.all([
-    loadImageDataUrl("/logo.png"),
-    loadImageDataUrl(student.photo_url),
+    loadImageResized("/logo.png", 150, 0.8),
+    loadImageResized(student.photo_url, 250, 0.75),
     QRCode.toDataURL(qrPayload, { margin: 0, width: 220 }),
   ]);
 
@@ -52,7 +65,7 @@ export async function generateIdCardPDF(student) {
   if (logoDataUrl) {
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(8, 8, 20, 20, 4, 4, "F");
-    doc.addImage(logoDataUrl, "PNG", 9.5, 9.5, 17, 17);
+    doc.addImage(logoDataUrl, "JPEG", 9.5, 9.5, 17, 17);
   }
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");

@@ -1,17 +1,31 @@
 import jsPDF from "jspdf";
 
-async function loadLogoDataUrl() {
-  try {
-    const res = await fetch("/logo.png");
-    const blob = await res.blob();
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
+function loadImageResized(url, maxDim = 200, quality = 0.75) {
+  return new Promise((resolve) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > height && width > maxDim) {
+        height = Math.round(height * (maxDim / width));
+        width = maxDim;
+      } else if (height >= width && height > maxDim) {
+        width = Math.round(width * (maxDim / height));
+        height = maxDim;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
 }
 
 export async function generateReceiptPDF(payment, student) {
@@ -20,13 +34,13 @@ export async function generateReceiptPDF(payment, student) {
   const gold = [200, 155, 60];
   const muted = [92, 100, 120];
 
-  const logoDataUrl = await loadLogoDataUrl();
+  const logoDataUrl = await loadImageResized("/logo.png", 200, 0.8);
 
   // Watermark: big faint logo in the center of the page
   if (logoDataUrl) {
     doc.saveGraphicsState();
     doc.setGState(new doc.GState({ opacity: 0.06 }));
-    doc.addImage(logoDataUrl, "PNG", 147, 320, 300, 300);
+    doc.addImage(logoDataUrl, "JPEG", 147, 320, 300, 300);
     doc.restoreGraphicsState();
   }
 
@@ -40,7 +54,7 @@ export async function generateReceiptPDF(payment, student) {
     // white rounded plate behind logo so it's clearly visible on navy
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(38, 18, 66, 66, 8, 8, "F");
-    doc.addImage(logoDataUrl, "PNG", 44, 24, 54, 54);
+    doc.addImage(logoDataUrl, "JPEG", 44, 24, 54, 54);
   }
 
   const textX = logoDataUrl ? 118 : 40;
