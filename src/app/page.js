@@ -12,23 +12,26 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function toAuthEmail(input) {
-    const trimmed = input.trim();
-    const digitsOnly = trimmed.replace(/\D/g, "");
-    // Agar input sirf number lagta hai (mobile number), toh usse internal login-email banao
-    if (!trimmed.includes("@") && digitsOnly.length >= 7 && digitsOnly.length === trimmed.replace(/[\s+\-()]/g, "").length) {
-      return `${digitsOnly}@mjcomputeracademy.local`;
-    }
-    return trimmed;
-  }
-
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    const resolveRes = await fetch("/api/resolve-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: loginId }),
+    });
+    const resolved = await resolveRes.json();
+
+    if (!resolveRes.ok || !resolved.email) {
+      setError(resolved.error || "Account not found. Please check your details.");
+      setLoading(false);
+      return;
+    }
+
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email: toAuthEmail(loginId),
+      email: resolved.email,
       password,
     });
 
@@ -65,7 +68,7 @@ export default function LoginPage() {
           style={{ borderColor: "#E9EAF0" }}
         >
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--muted)" }}>
-            Email or Mobile Number
+            Email, Mobile Number, or Student Code
           </label>
           <input
             type="text"
@@ -74,7 +77,7 @@ export default function LoginPage() {
             onChange={(e) => setLoginId(e.target.value)}
             className="w-full border rounded-lg px-3 py-2.5 mb-4 outline-none focus:ring-2"
             style={{ borderColor: "#E2E4EA" }}
-            placeholder="you@example.com or 98XXXXXXXX"
+            placeholder="Email / Mobile / Student Code"
           />
 
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--muted)" }}>
