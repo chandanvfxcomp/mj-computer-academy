@@ -66,7 +66,11 @@ export default function StudentDashboard() {
   const remaining = totalFee != null ? Math.max(totalFee - totalPaid, 0) : null;
   const plan = profile?.payment_plan || "monthly";
   const inst = totalFee != null ? installmentInfo(totalFee, profile?.custom_duration_months || profile?.courses?.duration_months, plan) : null;
-  const nextDue = inst ? Math.min(inst.amount, remaining ?? inst.amount) : remaining;
+  const nextDue = profile?.next_installment_amount != null
+    ? Number(profile.next_installment_amount)
+    : inst
+      ? Math.min(inst.amount, remaining ?? inst.amount)
+      : remaining;
   const approvedPayments = payments.filter((p) => p.status === "approved");
   const nextDueDate = remaining > 0 ? getNextDueDate(profile, approvedPayments) : null;
 
