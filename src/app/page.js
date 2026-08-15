@@ -7,10 +7,20 @@ import { createClient } from "@/lib/supabase/client";
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [email, setEmail] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function toAuthEmail(input) {
+    const trimmed = input.trim();
+    const digitsOnly = trimmed.replace(/\D/g, "");
+    // Agar input sirf number lagta hai (mobile number), toh usse internal login-email banao
+    if (!trimmed.includes("@") && digitsOnly.length >= 7 && digitsOnly.length === trimmed.replace(/[\s+\-()]/g, "").length) {
+      return `${digitsOnly}@mjcomputeracademy.local`;
+    }
+    return trimmed;
+  }
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -18,7 +28,7 @@ export default function LoginPage() {
     setLoading(true);
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
+      email: toAuthEmail(loginId),
       password,
     });
 
@@ -55,16 +65,16 @@ export default function LoginPage() {
           style={{ borderColor: "#E9EAF0" }}
         >
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--muted)" }}>
-            Email
+            Email or Mobile Number
           </label>
           <input
-            type="email"
+            type="text"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={loginId}
+            onChange={(e) => setLoginId(e.target.value)}
             className="w-full border rounded-lg px-3 py-2.5 mb-4 outline-none focus:ring-2"
             style={{ borderColor: "#E2E4EA" }}
-            placeholder="you@example.com"
+            placeholder="you@example.com or 98XXXXXXXX"
           />
 
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--muted)" }}>

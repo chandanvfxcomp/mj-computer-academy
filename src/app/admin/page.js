@@ -313,7 +313,9 @@ export default function AdminDashboard() {
                     <tr key={s.id} className="border-b last:border-0 align-top">
                       <td className="px-4 py-3">
                         <p className="font-medium">{s.full_name}</p>
-                        <p className="text-xs" style={{ color: "var(--muted)" }}>{s.email || "—"}</p>
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>
+                          {[s.email, s.phone].filter(Boolean).join(" • ") || "—"}
+                        </p>
                         <p className="text-xs" style={{ color: "var(--muted)" }}>{s.student_code || "no code"}</p>
                       </td>
                       <td className="px-4 py-3">{s.courses?.name || "—"}</td>
@@ -364,6 +366,7 @@ export default function AdminDashboard() {
           student={showHistory}
           payments={paymentsFor(showHistory.id)}
           onClose={() => setShowHistory(null)}
+          onDone={loadData}
         />
       )}
       {showCourses && (
@@ -373,19 +376,40 @@ export default function AdminDashboard() {
   );
 }
 
-function StudentHistoryModal({ student, payments, onClose }) {
+function StudentHistoryModal({ student, payments, onClose, onDone }) {
+  const supabase = createClient();
   const [monthFilter, setMonthFilter] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editDate, setEditDate] = useState("");
+  const [editAmount, setEditAmount] = useState("");
 
   const filtered = payments.filter((p) => {
     if (!monthFilter) return true;
     return p.payment_date?.slice(0, 7) === monthFilter;
   });
 
+  async function savePaymentEdit(paymentId) {
+    await supabase.from("payments").update({ payment_date: editDate, amount: Number(editAmount) }).eq("id", paymentId);
+    setEditingId(null);
+    if (onDone) await onDone();
+  }
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
         <h3 className="font-display text-lg font-bold mb-1">Payment History</h3>
-        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>{student.full_name}</p>
+        <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>{student.full_name}</p>
+
+        <div className="bg-gray-50 rounded-lg p-3 mb-4 grid grid-cols-2 gap-x-4 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {student.student_code || "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Course:</span> {student.courses?.name || "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Email:</span> {student.email || "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Phone:</span> {student.phone || "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {student.guardian_phone || "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {student.batch_timing || "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN") : "-"}</p>
+        </div>
 
         <input
           type="month"
@@ -400,26 +424,46 @@ function StudentHistoryModal({ student, payments, onClose }) {
             <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>No payments found.</p>
           ) : (
             filtered.map((p) => (
-              <div key={p.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
-                <div>
-                  <p className="text-sm font-semibold">
-                    ₹{Number(p.amount).toLocaleString("en-IN")}{" "}
-                    <span className="text-xs font-normal" style={{ color: p.status === "approved" ? "var(--success)" : "#946200" }}>
-                      ({p.status === "approved" ? "Approved" : "Pending"})
-                    </span>
-                  </p>
-                  <p className="text-xs" style={{ color: "var(--muted)" }}>
-                    {new Date(p.payment_date).toLocaleDateString("en-IN")} • {p.payment_mode.replace("_", " ")} • {p.receipt_number}
-                  </p>
-                </div>
-                {p.status === "approved" && (
-                  <button
-                    onClick={async () => await generateReceiptPDF(p, student)}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                    style={{ background: "var(--gold-light)", color: "var(--navy)" }}
-                  >
-                    Download
-                  </button>
+              <div key={p.id} className="border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
+                {editingId === p.id ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border rounded px-2 py-1 text-sm" style={{ borderColor: "#E2E4EA" }} />
+                    <input type="number" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="w-24 border rounded px-2 py-1 text-sm" style={{ borderColor: "#E2E4EA" }} />
+                    <button onClick={() => savePaymentEdit(p.id)} className="text-xs font-semibold px-2 py-1 rounded text-white" style={{ background: "var(--success)" }}>Save</button>
+                    <button onClick={() => setEditingId(null)} className="text-xs font-semibold px-2 py-1 rounded border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">
+                        ₹{Number(p.amount).toLocaleString("en-IN")}{" "}
+                        <span className="text-xs font-normal" style={{ color: p.status === "approved" ? "var(--success)" : "#946200" }}>
+                          ({p.status === "approved" ? "Approved" : "Pending"})
+                        </span>
+                      </p>
+                      <p className="text-xs" style={{ color: "var(--muted)" }}>
+                        {new Date(p.payment_date).toLocaleDateString("en-IN")} • {p.payment_mode.replace("_", " ")} • {p.receipt_number}
+                      </p>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => { setEditingId(p.id); setEditDate(p.payment_date); setEditAmount(p.amount); }}
+                        className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border"
+                        style={{ borderColor: "#E2E4EA" }}
+                      >
+                        Edit
+                      </button>
+                      {p.status === "approved" && (
+                        <button
+                          onClick={async () => await generateReceiptPDF(p, student)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                          style={{ background: "var(--gold-light)", color: "var(--navy)" }}
+                        >
+                          Download
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             ))
@@ -472,7 +516,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
         <h3 className="font-display text-lg font-bold mb-4">Add New Student</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
-          <input required type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} />
+          <input type="email" placeholder="Email (optional if mobile number given)" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} />
           <input required type="text" minLength={6} placeholder="Password (share with student)" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
           <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className={inputCls} style={inputStyle}>
             <option value="">Select course (optional)</option>

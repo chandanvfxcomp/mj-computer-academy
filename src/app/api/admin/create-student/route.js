@@ -25,8 +25,11 @@ export async function POST(request) {
 
   const { fullName, email, password, phone, courseId, customFee, paymentPlan, dob, guardianPhone, batchTiming } = await request.json();
 
-  if (!fullName || !email || !password) {
-    return NextResponse.json({ error: "Naam, email aur password required hai" }, { status: 400 });
+  if (!fullName || !password) {
+    return NextResponse.json({ error: "Name and password are required" }, { status: 400 });
+  }
+  if (!email?.trim() && !phone?.trim()) {
+    return NextResponse.json({ error: "Please provide at least an email or a mobile number" }, { status: 400 });
   }
 
   // 2. Use the service role key (server-side only) to create the student account
@@ -35,8 +38,12 @@ export async function POST(request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
+  // Agar email nahi diya, mobile number se ek internal login-email banate hain
+  const cleanPhone = phone ? phone.replace(/\D/g, "") : "";
+  const authEmail = email?.trim() || `${cleanPhone}@mjcomputeracademy.local`;
+
   const { data: created, error: createError } = await adminClient.auth.admin.createUser({
-    email,
+    email: authEmail,
     password,
     email_confirm: true,
     user_metadata: { full_name: fullName },
@@ -78,7 +85,7 @@ export async function POST(request) {
       custom_fee: customFee === "" || customFee == null ? null : Number(customFee),
       payment_plan: paymentPlan || "monthly",
       phone: phone || null,
-      email: email,
+      email: email?.trim() || null,
       date_of_birth: dob || null,
       guardian_phone: guardianPhone || null,
       batch_timing: batchTiming || null,
