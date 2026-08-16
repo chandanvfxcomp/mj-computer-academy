@@ -11,12 +11,12 @@ function loadImageResized(url, maxDim = 200, quality = 0.75, square = false) {
       const ctx = canvas.getContext("2d");
 
       if (square) {
-        // Center-crop to a square so the photo never looks stretched
+        // Center-crop to a square, but bias upward so faces/heads aren't cut off
         canvas.width = maxDim;
         canvas.height = maxDim;
         const side = Math.min(img.width, img.height);
         const sx = (img.width - side) / 2;
-        const sy = (img.height - side) / 2;
+        const sy = img.height > img.width ? (img.height - side) * 0.12 : (img.height - side) / 2;
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, maxDim, maxDim);
         ctx.drawImage(img, sx, sy, side, side, 0, 0, maxDim, maxDim);
