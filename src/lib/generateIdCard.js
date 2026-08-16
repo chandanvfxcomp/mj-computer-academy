@@ -31,7 +31,7 @@ function loadImageResized(url, maxDim = 200, quality = 0.75) {
 
 export async function generateIdCardPDF(student) {
   const W = 165;
-  const H = 275;
+  const H = 300;
   const doc = new jsPDF({ unit: "pt", format: [W, H] });
   const navy = [16, 27, 52];
   const gold = [200, 155, 60];
@@ -122,7 +122,10 @@ export async function generateIdCardPDF(student) {
   // ===== Details =====
   y += 20;
   doc.setFontSize(7);
-  const rows = [["Mobile", student.phone || "-"]];
+  const rows = [
+    ["Student ID", student.student_code || "-"],
+    ["Mobile", student.phone || "-"],
+  ];
   if (student.email) rows.push(["Email", student.email]);
   rows.push(["Admission", admissionDate]);
 
