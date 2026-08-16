@@ -555,7 +555,7 @@ function StaffModal({ onClose }) {
         <form onSubmit={handleAdd} className="space-y-2 border-t pt-4" style={{ borderColor: "#E2E4EA" }}>
           <p className="text-sm font-semibold">Add New Staff</p>
           <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
-          <input required type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} />
+          <input required type="email" autoCapitalize="none" autoCorrect="off" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value.toLowerCase().trim())} className={inputCls} style={inputStyle} />
           <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Mobile No. (optional)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <input required type="text" minLength={6} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
@@ -728,7 +728,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
         <h3 className="font-display text-lg font-bold mb-4">Add New Student</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
-          <input type="email" placeholder="Email (optional if mobile number given)" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} style={inputStyle} />
+          <input type="email" autoCapitalize="none" autoCorrect="off" placeholder="Email (optional if mobile number given)" value={email} onChange={(e) => setEmail(e.target.value.toLowerCase().trim())} className={inputCls} style={inputStyle} />
           <input required type="text" minLength={6} placeholder="Password (share with student)" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
           <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className={inputCls} style={inputStyle}>
             <option value="">Select course (optional)</option>

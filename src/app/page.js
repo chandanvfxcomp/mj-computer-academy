@@ -73,8 +73,10 @@ export default function LoginPage() {
           <input
             type="text"
             required
+            autoCapitalize="none"
+            autoCorrect="off"
             value={loginId}
-            onChange={(e) => setLoginId(e.target.value)}
+            onChange={(e) => setLoginId(e.target.value.toLowerCase().trim())}
             className="w-full border rounded-lg px-3 py-2.5 mb-4 outline-none focus:ring-2"
             style={{ borderColor: "#E2E4EA" }}
             placeholder="Email / Mobile / Student Code"
