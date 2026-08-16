@@ -21,6 +21,8 @@ export async function POST(request) {
 
   const digitsOnly = clean.replace(/\D/g, "");
   const looksLikePhone = digitsOnly.length >= 7 && digitsOnly.length === clean.replace(/[\s+\-()]/g, "").length;
+  // Agar +91 ya 0 prefix ke saath number diya hai, sirf aakhri 10 digit se match karo
+  const phoneDigits = digitsOnly.length > 10 ? digitsOnly.slice(-10) : digitsOnly;
 
   let profile = null;
 
@@ -34,12 +36,12 @@ export async function POST(request) {
     profile = data;
   }
 
-  if (!profile && digitsOnly) {
+  if (!profile && phoneDigits) {
     // Try matching a phone number
     const { data } = await adminClient
       .from("profiles")
       .select("id")
-      .eq("phone", digitsOnly)
+      .eq("phone", phoneDigits)
       .maybeSingle();
     profile = data;
   }
@@ -53,7 +55,7 @@ export async function POST(request) {
 
   // Fallback: assume it was meant as a phone number with the internal login pattern
   if (looksLikePhone) {
-    return NextResponse.json({ email: `${digitsOnly}@mjcomputeracademy.local` });
+    return NextResponse.json({ email: `${phoneDigits}@mjcomputeracademy.local` });
   }
 
   return NextResponse.json({ error: "No account found with that email, mobile number, or student code" }, { status: 404 });

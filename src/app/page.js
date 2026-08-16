@@ -1,16 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
+  const [checkingSession, setCheckingSession] = useState(true);
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function checkExisting() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setCheckingSession(false);
+        return;
+      }
+      const res = await fetch("/api/whoami");
+      const { role } = await res.json();
+      if (role === "admin" || role === "staff") {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/student";
+      }
+    }
+    checkExisting();
+  }, [supabase]);
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -49,6 +70,14 @@ export default function LoginPage() {
     } else {
       window.location.href = "/student";
     }
+  }
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
+        <p style={{ color: "var(--muted)" }}>Loading...</p>
+      </div>
+    );
   }
 
   return (

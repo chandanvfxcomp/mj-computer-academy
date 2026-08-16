@@ -32,6 +32,12 @@ export async function POST(request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
+  // Us student ki photo (agar hai) storage se hata do
+  const { data: files } = await adminClient.storage.from("student-photos").list(studentId);
+  if (files && files.length > 0) {
+    await adminClient.storage.from("student-photos").remove(files.map((f) => `${studentId}/${f.name}`));
+  }
+
   const { error } = await adminClient.auth.admin.deleteUser(studentId);
 
   if (error) {
