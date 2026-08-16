@@ -175,14 +175,14 @@ export default function StudentDashboard() {
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
           <p className="font-display text-sm font-bold mb-2">My Details</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {profile?.student_code || "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Course:</span> {profile?.courses?.name || "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Email:</span> {profile?.email || "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Mobile No.:</span> {profile?.phone || "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString("en-IN") : "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {profile?.guardian_phone || "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {profile?.batch_timing || "-"}</p>
-            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {profile?.joining_date ? new Date(profile.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {profile?.student_code || "N/A"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Course:</span> {profile?.courses?.name || "N/A"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Email:</span> {profile?.email || "N/A"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Mobile No.:</span> {profile?.phone || "N/A"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString("en-IN") : "N/A"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {profile?.guardian_phone || "N/A"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {profile?.batch_timing || "N/A"}</p>
+            <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {profile?.joining_date ? new Date(profile.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</p>
           </div>
         </div>
 

@@ -14,6 +14,14 @@ function genReceiptNumber() {
 }
 
 const inputCls = "w-full border rounded-lg px-3 py-2";
+const BATCH_OPTIONS = [
+  "Morning (7:00 - 9:00 AM)",
+  "Morning (9:00 - 11:00 AM)",
+  "Afternoon (12:00 - 2:00 PM)",
+  "Afternoon (2:00 - 4:00 PM)",
+  "Evening (4:00 - 6:00 PM)",
+  "Evening (6:00 - 8:00 PM)",
+];
 const inputStyle = { borderColor: "#E2E4EA" };
 
 export default function AdminDashboard() {
@@ -596,14 +604,14 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
         <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>{student.full_name}</p>
 
         <div className="bg-gray-50 rounded-lg p-3 mb-4 grid grid-cols-2 gap-x-4 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {student.student_code || "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Course:</span> {student.courses?.name || "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Email:</span> {student.email || "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Mobile No.:</span> {student.phone || "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {student.guardian_phone || "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {student.batch_timing || "-"}</p>
-          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {student.student_code || "N/A"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Course:</span> {student.courses?.name || "N/A"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Email:</span> {student.email || "N/A"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Mobile No.:</span> {student.phone || "N/A"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>DOB:</span> {student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "N/A"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Guardian No.:</span> {student.guardian_phone || "N/A"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Batch:</span> {student.batch_timing || "N/A"}</p>
+          <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</p>
         </div>
 
         <input
@@ -687,6 +695,7 @@ function AddStudentModal({ courses, onClose, onDone }) {
   const [dob, setDob] = useState("");
   const [guardianPhone, setGuardianPhone] = useState("");
   const [batchTiming, setBatchTiming] = useState("");
+  const [batchPreset, setBatchPreset] = useState("");
   const [admissionDate, setAdmissionDate] = useState(new Date().toISOString().slice(0, 10));
   const [photoFile, setPhotoFile] = useState(null);
   const [error, setError] = useState("");
@@ -750,11 +759,38 @@ function AddStudentModal({ courses, onClose, onDone }) {
           </div>
           <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Mobile No. (optional)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <div>
-            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Date of Birth (optional)</label>
-            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} style={inputStyle} />
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Date of Birth</label>
+            <input required type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} style={inputStyle} />
           </div>
           <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Parent/Guardian Number (optional)" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
-          <input placeholder="Batch/Timing (e.g. Morning 9-11 AM)" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Batch/Timing (optional)</label>
+            <select
+              value={batchPreset}
+              onChange={(e) => {
+                setBatchPreset(e.target.value);
+                if (e.target.value !== "Other") setBatchTiming(e.target.value);
+                else setBatchTiming("");
+              }}
+              className={inputCls}
+              style={inputStyle}
+            >
+              <option value="">Select batch (optional)</option>
+              {BATCH_OPTIONS.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+              <option value="Other">Other (type custom)</option>
+            </select>
+            {batchPreset === "Other" && (
+              <input
+                placeholder="Custom batch/timing"
+                value={batchTiming}
+                onChange={(e) => setBatchTiming(e.target.value)}
+                className={inputCls + " mt-2"}
+                style={inputStyle}
+              />
+            )}
+          </div>
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Admission Date</label>
             <input type="date" value={admissionDate} onChange={(e) => setAdmissionDate(e.target.value)} className={inputCls} style={inputStyle} />
@@ -790,6 +826,9 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   const [dob, setDob] = useState(student.date_of_birth || "");
   const [guardianPhone, setGuardianPhone] = useState(student.guardian_phone || "");
   const [batchTiming, setBatchTiming] = useState(student.batch_timing || "");
+  const [batchPreset, setBatchPreset] = useState(
+    BATCH_OPTIONS.includes(student.batch_timing) ? student.batch_timing : student.batch_timing ? "Other" : ""
+  );
   const [admissionDate, setAdmissionDate] = useState(student.joining_date || "");
   const [photoFile, setPhotoFile] = useState(null);
   const [error, setError] = useState("");
@@ -883,7 +922,34 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
             <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} style={inputStyle} />
           </div>
           <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Parent/Guardian Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
-          <input placeholder="Batch/Timing" value={batchTiming} onChange={(e) => setBatchTiming(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Batch/Timing</label>
+            <select
+              value={batchPreset}
+              onChange={(e) => {
+                setBatchPreset(e.target.value);
+                if (e.target.value !== "Other") setBatchTiming(e.target.value);
+                else setBatchTiming("");
+              }}
+              className={inputCls}
+              style={inputStyle}
+            >
+              <option value="">Select batch (optional)</option>
+              {BATCH_OPTIONS.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+              <option value="Other">Other (type custom)</option>
+            </select>
+            {batchPreset === "Other" && (
+              <input
+                placeholder="Custom batch/timing"
+                value={batchTiming}
+                onChange={(e) => setBatchTiming(e.target.value)}
+                className={inputCls + " mt-2"}
+                style={inputStyle}
+              />
+            )}
+          </div>
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Admission Date</label>
             <input type="date" value={admissionDate} onChange={(e) => setAdmissionDate(e.target.value)} className={inputCls} style={inputStyle} />

@@ -38,16 +38,16 @@ export async function generateIdCardPDF(student) {
   const muted = [92, 100, 120];
   const lightBg = [246, 247, 250];
 
-  const admissionDate = student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-";
+  const admissionDate = student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "N/A";
   const qrPayload = [
-    `Name: ${student.full_name || "-"}`,
-    `Code: ${student.student_code || "-"}`,
-    `Course: ${student.courses?.name || "-"}`,
-    `Mobile: ${student.phone || "-"}`,
-    `Email: ${student.email || "-"}`,
-    `DOB: ${student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "-"}`,
+    `Name: ${student.full_name || "N/A"}`,
+    `Code: ${student.student_code || "N/A"}`,
+    `Course: ${student.courses?.name || "N/A"}`,
+    `Mobile: ${student.phone || "N/A"}`,
+    `Email: ${student.email || "N/A"}`,
+    `DOB: ${student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "N/A"}`,
     `Admission Date: ${admissionDate}`,
-    `Batch: ${student.batch_timing || "-"}`,
+    `Batch: ${student.batch_timing || "N/A"}`,
   ].join("\n");
 
   const [logoDataUrl, photoDataUrl, qrDataUrl] = await Promise.all([
@@ -100,7 +100,7 @@ export async function generateIdCardPDF(student) {
   doc.setTextColor(...navy);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11.5);
-  const nameLines = doc.splitTextToSize((student.full_name || "-").toUpperCase(), W - 20);
+  const nameLines = doc.splitTextToSize((student.full_name || "N/A").toUpperCase(), W - 20);
   let y = photoY + photoSize + 18;
   nameLines.slice(0, 2).forEach((line) => {
     doc.text(line, W / 2, y, { align: "center" });
@@ -108,7 +108,7 @@ export async function generateIdCardPDF(student) {
   });
 
   // ===== Course pill =====
-  const courseName = student.courses?.name || "-";
+  const courseName = student.courses?.name || "N/A";
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   const pillW = Math.min(W - 24, doc.getTextWidth(courseName) + 22);
@@ -123,8 +123,9 @@ export async function generateIdCardPDF(student) {
   y += 20;
   doc.setFontSize(7);
   const rows = [
-    ["Student ID", student.student_code || "-"],
-    ["Mobile", student.phone || "-"],
+    ["Student ID", student.student_code || "N/A"],
+    ["Mobile", student.phone || "N/A"],
+    ["DOB", student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "N/A"],
   ];
   if (student.email) rows.push(["Email", student.email]);
   rows.push(["Admission", admissionDate]);

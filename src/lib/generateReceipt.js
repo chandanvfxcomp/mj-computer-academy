@@ -90,10 +90,10 @@ export async function generateReceiptPDF(payment, student) {
   doc.setFontSize(11);
   doc.setTextColor(...muted);
   doc.text(`Name: ${student.full_name}`, 40, 230);
-  doc.text(`Student Code: ${student.student_code || "-"}`, 40, 248);
-  doc.text(`Course: ${student.courses?.name || student.course || "-"}`, 40, 266);
-  doc.text(`Email: ${student.email || "-"}`, 320, 230);
-  doc.text(`Mobile No.: ${student.phone || "-"}`, 320, 248);
+  doc.text(`Student Code: ${student.student_code || "N/A"}`, 40, 248);
+  doc.text(`Course: ${student.courses?.name || student.course || "N/A"}`, 40, 266);
+  doc.text(`Email: ${student.email || "N/A"}`, 320, 230);
+  doc.text(`Mobile No.: ${student.phone || "N/A"}`, 320, 248);
 
   // Payment table
   doc.setDrawColor(226, 228, 234);
