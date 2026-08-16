@@ -109,7 +109,10 @@ export default function LoginPage() {
           </button>
 
           <p className="text-center text-sm mt-4" style={{ color: "var(--muted)" }}>
-            Don&apos;t have login details? Contact the academy office.
+            Don&apos;t have login details? Contact{" "}
+            <a href="mailto:mjcomputeracademy@gmail.com" className="font-semibold underline" style={{ color: "var(--navy)" }}>
+              mjcomputeracademy@gmail.com
+            </a>
           </p>
         </form>
       </div>
