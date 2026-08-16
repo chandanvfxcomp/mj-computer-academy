@@ -8,6 +8,17 @@ import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { generateIdCardPDF } from "@/lib/generateIdCard";
 import { getNextDueDate } from "@/lib/dueDate";
 
+function downloadCSV(filename, rows) {
+  const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function genReceiptNumber() {
   const rand = Math.floor(1000 + Math.random() * 9000);
   return `MJCA-${Date.now().toString().slice(-6)}${rand}`;
@@ -220,7 +231,68 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Pending payments */}
+        <div className="flex gap-2 mb-8">
+          <button
+            onClick={() =>
+              downloadCSV(
+                `students-${new Date().toISOString().slice(0, 10)}.csv`,
+                [
+                  ["Name", "Student Code", "Email", "Mobile", "Course", "Total Fee", "Total Paid", "Balance Due", "Payment Plan", "DOB", "Guardian No.", "Batch", "Admission Date"],
+                  ...students.map((s) => {
+                    const fee = feeFor(s);
+                    const paid = totalPaidFor(s.id);
+                    return [
+                      s.full_name,
+                      s.student_code || "",
+                      s.email || "",
+                      s.phone || "",
+                      s.courses?.name || "",
+                      fee ?? "",
+                      paid,
+                      fee != null ? Math.max(fee - paid, 0) : "",
+                      s.payment_plan || "",
+                      s.date_of_birth || "",
+                      s.guardian_phone || "",
+                      s.batch_timing || "",
+                      s.joining_date || "",
+                    ];
+                  }),
+                ]
+              )
+            }
+            className="text-sm font-semibold px-3 py-2 rounded-lg border"
+            style={{ borderColor: "#E2E4EA" }}
+          >
+            📄 Export Students CSV
+          </button>
+          <button
+            onClick={() =>
+              downloadCSV(
+                `payments-${new Date().toISOString().slice(0, 10)}.csv`,
+                [
+                  ["Student Name", "Student Code", "Amount", "Date", "Mode", "Status", "Receipt No.", "UTR/Reference"],
+                  ...payments.map((p) => {
+                    const s = students.find((st) => st.id === p.student_id);
+                    return [
+                      s?.full_name || "",
+                      s?.student_code || "",
+                      p.amount,
+                      p.payment_date,
+                      p.payment_mode,
+                      p.status,
+                      p.receipt_number,
+                      p.utr_number || "",
+                    ];
+                  }),
+                ]
+              )
+            }
+            className="text-sm font-semibold px-3 py-2 rounded-lg border"
+            style={{ borderColor: "#E2E4EA" }}
+          >
+            📄 Export Payments CSV
+          </button>
+        </div>
         {pendingPayments.length > 0 && (
           <div className="mb-8">
             <h2 className="font-display text-lg font-bold mb-3">Pending Payments (Needs Approval)</h2>

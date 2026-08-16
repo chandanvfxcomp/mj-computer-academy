@@ -1,32 +1,61 @@
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
 
-function loadImageResized(url, maxDim = 200, quality = 0.75) {
+function loadImageResized(url, maxDim = 200, quality = 0.75, square = false) {
   return new Promise((resolve) => {
     if (!url) return resolve(null);
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
-      let { width, height } = img;
-      if (width > height && width > maxDim) {
-        height = Math.round(height * (maxDim / width));
-        width = maxDim;
-      } else if (height >= width && height > maxDim) {
-        width = Math.round(width * (maxDim / height));
-        height = maxDim;
-      }
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
       const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0, width, height);
+
+      if (square) {
+        // Center-crop to a square so the photo never looks stretched
+        canvas.width = maxDim;
+        canvas.height = maxDim;
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, maxDim, maxDim);
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, maxDim, maxDim);
+      } else {
+        let { width, height } = img;
+        if (width > height && width > maxDim) {
+          height = Math.round(height * (maxDim / width));
+          width = maxDim;
+        } else if (height >= width && height > maxDim) {
+          width = Math.round(width * (maxDim / height));
+          height = maxDim;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+      }
       resolve(canvas.toDataURL("image/jpeg", quality));
     };
     img.onerror = () => resolve(null);
     img.src = url;
   });
+}
+
+// Draws text at a given size, auto-shrinking until it fits maxWidth (never truncates)
+function fitText(doc, text, maxWidth, startSize, minSize = 4.5) {
+  let size = startSize;
+  doc.setFontSize(size);
+  while (doc.getTextWidth(text) > maxWidth && size > minSize) {
+    size -= 0.2;
+    doc.setFontSize(size);
+  }
+  return size;
+}
+
+function formatShortDate(dateStr) {
+  if (!dateStr) return "N/A";
+  return new Date(dateStr).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 export async function generateIdCardPDF(student) {
@@ -38,21 +67,23 @@ export async function generateIdCardPDF(student) {
   const muted = [92, 100, 120];
   const lightBg = [246, 247, 250];
 
-  const admissionDate = student.joining_date ? new Date(student.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "N/A";
+  const admissionDate = formatShortDate(student.joining_date);
+  const dobFormatted = formatShortDate(student.date_of_birth);
+
   const qrPayload = [
     `Name: ${student.full_name || "N/A"}`,
     `Code: ${student.student_code || "N/A"}`,
     `Course: ${student.courses?.name || "N/A"}`,
     `Mobile: ${student.phone || "N/A"}`,
     `Email: ${student.email || "N/A"}`,
-    `DOB: ${student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "N/A"}`,
+    `DOB: ${dobFormatted}`,
     `Admission Date: ${admissionDate}`,
     `Batch: ${student.batch_timing || "N/A"}`,
   ].join("\n");
 
   const [logoDataUrl, photoDataUrl, qrDataUrl] = await Promise.all([
     loadImageResized("/logo.png", 150, 0.8),
-    loadImageResized(student.photo_url, 250, 0.75),
+    loadImageResized(student.photo_url, 300, 0.8, true),
     QRCode.toDataURL(qrPayload, { margin: 0, width: 220 }),
   ]);
 
@@ -77,7 +108,7 @@ export async function generateIdCardPDF(student) {
   doc.setTextColor(228, 197, 120);
   doc.text("STUDENT IDENTITY CARD", 34, 32);
 
-  // ===== Photo =====
+  // ===== Photo (square-cropped, never stretched) =====
   const photoSize = 72;
   const photoX = (W - photoSize) / 2;
   const photoY = 48;
@@ -107,10 +138,11 @@ export async function generateIdCardPDF(student) {
     y += 12;
   });
 
-  // ===== Course pill =====
+  // ===== Course pill (auto-shrinks so long course names never overflow) =====
   const courseName = student.courses?.name || "N/A";
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
+  const maxPillTextWidth = W - 46;
+  const pillFontSize = fitText(doc, courseName, maxPillTextWidth, 7.5, 5.5);
   const pillW = Math.min(W - 24, doc.getTextWidth(courseName) + 22);
   const pillX = (W - pillW) / 2;
   y += 5;
@@ -119,25 +151,31 @@ export async function generateIdCardPDF(student) {
   doc.setTextColor(...gold);
   doc.text(courseName, W / 2, y + 1, { align: "center" });
 
-  // ===== Details =====
+  // ===== Details (values auto-shrink so nothing is ever cut off) =====
   y += 20;
-  doc.setFontSize(7);
   const rows = [
     ["Student ID", student.student_code || "N/A"],
     ["Mobile", student.phone || "N/A"],
-    ["DOB", student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "N/A"],
+    ["DOB", dobFormatted],
   ];
   if (student.email) rows.push(["Email", student.email]);
   rows.push(["Admission", admissionDate]);
 
+  const labelX = 16;
+  const valueX = 60;
+  const maxValueWidth = W - valueX - 10;
+
   rows.forEach(([label, value]) => {
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
     doc.setTextColor(...muted);
-    doc.text(`${label}:`, 16, y);
+    doc.text(`${label}:`, labelX, y);
+
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...navy);
-    const valueLines = doc.splitTextToSize(String(value), W - 76);
-    doc.text(valueLines[0], 60, y);
+    fitText(doc, String(value), maxValueWidth, 7, 5);
+    doc.text(String(value), valueX, y);
+
     y += 11;
   });
 
@@ -159,17 +197,10 @@ export async function generateIdCardPDF(student) {
   doc.setTextColor(...gold);
   doc.text("ACADEMY CONTACT", textX, H - footerH + 15);
 
-  // Email — auto-shrink font so it always fits on one line
-  const emailText = "mjcomputeracademy@gmail.com";
-  let emailSize = 6;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(emailSize);
-  while (doc.getTextWidth(emailText) > availWidth && emailSize > 3.8) {
-    emailSize -= 0.2;
-    doc.setFontSize(emailSize);
-  }
+  fitText(doc, "mjcomputeracademy@gmail.com", availWidth, 6, 3.8);
   doc.setTextColor(255, 255, 255);
-  doc.text(emailText, textX, H - footerH + 25);
+  doc.text("mjcomputeracademy@gmail.com", textX, H - footerH + 25);
 
   doc.setFontSize(5.6);
   doc.setTextColor(228, 197, 120);
