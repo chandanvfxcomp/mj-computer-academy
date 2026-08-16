@@ -52,6 +52,7 @@ export default function AdminDashboard() {
   const [deleteBusyId, setDeleteBusyId] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [myRole, setMyRole] = useState(null);
+  const [myStaffCategory, setMyStaffCategory] = useState(null);
   const [showStaff, setShowStaff] = useState(false);
   const isAdmin = myRole === "admin";
 
@@ -81,12 +82,13 @@ export default function AdminDashboard() {
         return;
       }
       const res = await fetch("/api/whoami");
-      const { role } = await res.json();
+      const { role, staffCategory } = await res.json();
       if (role !== "admin" && role !== "staff") {
         router.push("/student");
         return;
       }
       setMyRole(role);
+      setMyStaffCategory(staffCategory);
       await loadData();
       setChecking(false);
     }
@@ -195,7 +197,9 @@ export default function AdminDashboard() {
             <img src="/logo.png" alt="MJ Computer Academy" className="w-10 h-10 object-contain rounded-lg bg-white p-0.5" />
             <div>
               <p className="font-display font-bold leading-tight">MJ Computer Academy</p>
-              <p className="text-xs" style={{ color: "var(--gold-light)" }}>Admin Dashboard</p>
+              <p className="text-xs" style={{ color: "var(--gold-light)" }}>
+                {isAdmin ? "Admin Dashboard" : `Staff Dashboard — ${categoryLabel(myStaffCategory)}`}
+              </p>
             </div>
           </div>
           <button onClick={handleLogout} className="text-sm px-3 py-1.5 rounded-lg border border-white/30 hover:bg-white/10">
@@ -538,6 +542,12 @@ export default function AdminDashboard() {
   );
 }
 
+function categoryLabel(cat) {
+  if (cat === "computer") return "Computer (MJCA)";
+  if (cat === "academic") return "Academic (MJ)";
+  return "All Courses";
+}
+
 function StaffModal({ onClose }) {
   const supabase = createClient();
   const [staffList, setStaffList] = useState([]);
@@ -546,9 +556,11 @@ function StaffModal({ onClose }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [staffCategory, setStaffCategory] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [deleteBusyId, setDeleteBusyId] = useState(null);
+  const [editingStaff, setEditingStaff] = useState(null);
 
   const loadStaff = useCallback(async () => {
     const { data } = await supabase.from("profiles").select("*").eq("role", "staff").order("created_at", { ascending: false });
@@ -567,7 +579,7 @@ function StaffModal({ onClose }) {
     const res = await fetch("/api/admin/create-staff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, phone, password }),
+      body: JSON.stringify({ fullName, email, phone, password, staffCategory }),
     });
     const result = await res.json();
     setBusy(false);
@@ -579,6 +591,7 @@ function StaffModal({ onClose }) {
     setEmail("");
     setPhone("");
     setPassword("");
+    setStaffCategory("");
     await loadStaff();
   }
 
@@ -604,7 +617,7 @@ function StaffModal({ onClose }) {
       <div className="bg-white rounded-2xl p-6 w-full max-w-md">
         <h3 className="font-display text-lg font-bold mb-1">Manage Staff</h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-          Staff (e.g. receptionist) can view students, add and approve payments — but cannot add/edit/delete students, manage courses, or reset passwords.
+          Staff (e.g. receptionist) can view students, add and approve payments — but cannot add/edit/delete students, manage courses, or reset passwords. Assign a category to limit them to only that category&apos;s students.
         </p>
 
         <div className="space-y-2 mb-4 max-h-52 overflow-y-auto">
@@ -618,15 +631,25 @@ function StaffModal({ onClose }) {
                 <div>
                   <p className="text-sm font-medium">{st.full_name}</p>
                   <p className="text-xs" style={{ color: "var(--muted)" }}>{st.email}</p>
+                  <p className="text-xs font-semibold" style={{ color: "var(--gold)" }}>{categoryLabel(st.staff_category)}</p>
                 </div>
-                <button
-                  onClick={() => removeStaff(st.id)}
-                  disabled={deleteBusyId === st.id}
-                  className="text-xs px-2 py-1 rounded border disabled:opacity-50"
-                  style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}
-                >
-                  {deleteBusyId === st.id ? "..." : "Remove"}
-                </button>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setEditingStaff(st)}
+                    className="text-xs px-2 py-1 rounded border"
+                    style={{ borderColor: "#E2E4EA" }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => removeStaff(st.id)}
+                    disabled={deleteBusyId === st.id}
+                    className="text-xs px-2 py-1 rounded border disabled:opacity-50"
+                    style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}
+                  >
+                    {deleteBusyId === st.id ? "..." : "Remove"}
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -638,11 +661,84 @@ function StaffModal({ onClose }) {
           <input required type="email" autoCapitalize="none" autoCorrect="off" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value.toLowerCase().trim())} className={inputCls} style={inputStyle} />
           <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Mobile No. (optional)" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
           <input required type="text" minLength={6} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Which courses can they manage?</label>
+            <select value={staffCategory} onChange={(e) => setStaffCategory(e.target.value)} className={inputCls} style={inputStyle}>
+              <option value="">All Courses</option>
+              <option value="computer">Computer (MJCA)</option>
+              <option value="academic">Academic (MJ)</option>
+            </select>
+          </div>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Close</button>
             <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>
               {busy ? "Adding..." : "Add Staff"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {editingStaff && (
+        <EditStaffModal
+          staff={editingStaff}
+          onClose={() => setEditingStaff(null)}
+          onDone={async () => {
+            setEditingStaff(null);
+            await loadStaff();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditStaffModal({ staff, onClose, onDone }) {
+  const [fullName, setFullName] = useState(staff.full_name || "");
+  const [phone, setPhone] = useState(staff.phone || "");
+  const [staffCategory, setStaffCategory] = useState(staff.staff_category || "");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+    const res = await fetch("/api/admin/update-staff", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ staffId: staff.id, fullName, phone, staffCategory }),
+    });
+    const result = await res.json();
+    setBusy(false);
+    if (!res.ok) {
+      setError(result.error || "Update failed");
+      return;
+    }
+    onDone();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-start justify-center px-4 z-[60] overflow-y-auto py-8">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+        <h3 className="font-display text-lg font-bold mb-4">Edit Staff</h3>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
+          <p className="text-xs" style={{ color: "var(--muted)" }}>Email: {staff.email} (cannot be changed here)</p>
+          <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Mobile No." value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Which courses can they manage?</label>
+            <select value={staffCategory} onChange={(e) => setStaffCategory(e.target.value)} className={inputCls} style={inputStyle}>
+              <option value="">All Courses</option>
+              <option value="computer">Computer (MJCA)</option>
+              <option value="academic">Academic (MJ)</option>
+            </select>
+          </div>
+          {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 font-semibold border" style={{ borderColor: "#E2E4EA" }}>Cancel</button>
+            <button type="submit" disabled={busy} className="flex-1 rounded-lg py-2 font-semibold text-white disabled:opacity-60" style={{ background: "var(--navy)" }}>
+              {busy ? "Saving..." : "Save"}
             </button>
           </div>
         </form>

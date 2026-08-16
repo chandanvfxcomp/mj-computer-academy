@@ -13,9 +13,9 @@ export async function GET() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, staff_category")
     .eq("id", user.id)
     .maybeSingle();
 
-  return NextResponse.json({ role: profile?.role || "student" });
+  return NextResponse.json({ role: profile?.role || "student", staffCategory: profile?.staff_category || null });
 }
