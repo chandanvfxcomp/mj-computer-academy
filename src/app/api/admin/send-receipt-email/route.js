@@ -1,5 +1,6 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 export async function POST(request) {
   const supabase = await createServerClient();
@@ -38,7 +39,7 @@ export async function POST(request) {
     return NextResponse.json({ skipped: true, reason: "No email on file for this student" });
   }
 
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.GMAIL_APP_PASSWORD) {
     return NextResponse.json({ skipped: true, reason: "Email service not configured" });
   }
 
@@ -65,23 +66,23 @@ export async function POST(request) {
     </div>
   `;
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "mjcomputeracademy@gmail.com",
+      pass: process.env.GMAIL_APP_PASSWORD,
     },
-    body: JSON.stringify({
-      from: "MJ Computer Academy <onboarding@resend.dev>",
+  });
+
+  try {
+    await transporter.sendMail({
+      from: '"MJ Computer Academy" <mjcomputeracademy@gmail.com>',
       to: student.email,
       subject: `Payment Received — Receipt ${payment.receipt_number}`,
       html,
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    return NextResponse.json({ error: `Email failed: ${errText}` }, { status: 400 });
+    });
+  } catch (err) {
+    return NextResponse.json({ error: `Email failed: ${err.message}` }, { status: 400 });
   }
 
   return NextResponse.json({ success: true });
