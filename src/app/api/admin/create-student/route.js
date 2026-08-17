@@ -60,14 +60,14 @@ export async function POST(request) {
     .select("id", { count: "exact", head: true })
     .eq("role", "student");
 
-  let prefix = "MJ";
+  let prefix = "MJ00";
   if (courseId) {
     const { data: courseData } = await adminClient
       .from("courses")
       .select("category")
       .eq("id", courseId)
       .single();
-    prefix = courseData?.category === "academic" ? "MJ" : "MJCA";
+    prefix = courseData?.category === "academic" ? "MJ00" : "MJCA";
   }
 
   const yearCode = new Date().getFullYear().toString().slice(-2);
