@@ -37,13 +37,21 @@ export async function POST(request) {
   }
 
   if (!profile && phoneDigits) {
-    // Try matching a phone number
+    // Try matching a phone number — but if it belongs to more than one student
+    // (e.g. siblings sharing a number), we can't guess which one, so ask for Student Code instead
     const { data } = await adminClient
       .from("profiles")
       .select("id")
       .eq("phone", phoneDigits)
-      .maybeSingle();
-    profile = data;
+      .limit(2);
+
+    if (data && data.length > 1) {
+      return NextResponse.json(
+        { error: "This mobile number is linked to more than one student account. Please log in using your Student Code instead." },
+        { status: 409 }
+      );
+    }
+    profile = data?.[0] || null;
   }
 
   if (profile) {

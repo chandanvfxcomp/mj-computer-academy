@@ -153,6 +153,12 @@ export default function AdminDashboard() {
       .from("payments")
       .update({ status: "approved", screenshot_url: null, screenshot_path: null })
       .eq("id", payment.id);
+    // Best-effort: student ko email se receipt confirmation bhej do (agar unka email hai)
+    fetch("/api/admin/send-receipt-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentId: payment.id }),
+    }).catch(() => {});
     await loadData();
   }
 
@@ -1182,7 +1188,7 @@ function AddPaymentModal({ student, onClose, onDone }) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const { error: insertError } = await supabase.from("payments").insert({
+    const { data: inserted, error: insertError } = await supabase.from("payments").insert({
       student_id: student.id,
       amount: Number(amount),
       payment_date: paymentDate,
@@ -1191,11 +1197,18 @@ function AddPaymentModal({ student, onClose, onDone }) {
       receipt_number: genReceiptNumber(),
       created_by: user.id,
       status: "approved",
-    });
+    }).select().single();
     setBusy(false);
     if (insertError) {
       setError(insertError.message);
       return;
+    }
+    if (inserted) {
+      fetch("/api/admin/send-receipt-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId: inserted.id }),
+      }).catch(() => {});
     }
     onDone();
   }

@@ -32,29 +32,13 @@ export async function POST(request) {
     return NextResponse.json({ error: "Please provide at least an email or a mobile number" }, { status: 400 });
   }
 
-  // 2. Use the service role key (server-side only) to create the student account
+  // 2. Unique, professional student code generate karo pehle (ye guaranteed unique hai,
+  //    isliye ise hi login-email ka base banayenge — do siblings ka phone same ho tab bhi conflict nahi hoga)
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  // Agar email nahi diya, mobile number se ek internal login-email banate hain
-  const cleanPhone = phone ? phone.replace(/\D/g, "") : "";
-  const authEmail = email?.trim() || `${cleanPhone}@mjcomputeracademy.local`;
-
-  const { data: created, error: createError } = await adminClient.auth.admin.createUser({
-    email: authEmail,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: fullName },
-  });
-
-  if (createError) {
-    return NextResponse.json({ error: createError.message }, { status: 400 });
-  }
-
-  // 3. Fill in the extra profile fields (the trigger already created the base row)
-  // Unique, professional student code generate karo: prefix<year><naam ka pehla letter><4-digit number>
   const { count } = await adminClient
     .from("profiles")
     .select("id", { count: "exact", head: true })
@@ -72,10 +56,26 @@ export async function POST(request) {
 
   const yearCode = new Date().getFullYear().toString().slice(-2);
   const initial = (fullName?.trim()?.[0] || "X").toUpperCase();
-  // Total code length hamesha 11 characters rahegi, chahe prefix MJCA ho ya MJ
   const seqDigits = 11 - prefix.length - yearCode.length - initial.length;
   const seq = String(count || 1).padStart(seqDigits, "0");
   const studentCode = `${prefix}${yearCode}${initial}${seq}`;
+
+  // 3. Agar real email nahi diya, student code se ek unique internal login-email banate hain
+  //    (phone se nahi — kyunki 2 siblings ka phone number same ho sakta hai)
+  const authEmail = email?.trim() || `${studentCode.toLowerCase()}@mjcomputeracademy.local`;
+
+  const { data: created, error: createError } = await adminClient.auth.admin.createUser({
+    email: authEmail,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
+  });
+
+  if (createError) {
+    return NextResponse.json({ error: createError.message }, { status: 400 });
+  }
+
+  // 4. Fill in the extra profile fields (the trigger already created the base row)
 
   const { error: updateError } = await adminClient
     .from("profiles")
