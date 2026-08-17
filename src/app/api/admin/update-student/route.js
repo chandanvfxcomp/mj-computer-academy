@@ -21,7 +21,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Sirf admin allowed hai" }, { status: 403 });
   }
 
-  const { studentId, fullName, courseId, customFee, customDuration, nextInstallmentAmount, studentCode, phone, paymentPlan, dob, guardianPhone, batchTiming, admissionDate } = await request.json();
+  const { studentId, fullName, courseId, customFee, customDuration, nextInstallmentAmount, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate } = await request.json();
 
   const { error } = await supabase
     .from("profiles")
@@ -34,6 +34,7 @@ export async function POST(request) {
       payment_plan: paymentPlan || "monthly",
       student_code: studentCode || null,
       phone: phone || null,
+      email: email?.trim() || null,
       date_of_birth: dob || null,
       guardian_phone: guardianPhone || null,
       batch_timing: batchTiming || null,

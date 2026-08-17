@@ -997,6 +997,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   const [nextInstallmentAmount, setNextInstallmentAmount] = useState(student.next_installment_amount ?? "");
   const [paymentPlan, setPaymentPlan] = useState(student.payment_plan || "monthly");
   const [phone, setPhone] = useState(student.phone || "");
+  const [email, setEmail] = useState(student.email || "");
   const [dob, setDob] = useState(student.date_of_birth || "");
   const [guardianPhone, setGuardianPhone] = useState(student.guardian_phone || "");
   const [batchTiming, setBatchTiming] = useState(student.batch_timing || "");
@@ -1020,7 +1021,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
     const res = await fetch("/api/admin/update-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, customDuration, nextInstallmentAmount, studentCode, phone, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
+      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, customDuration, nextInstallmentAmount, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
     });
     const result = await res.json();
     if (!res.ok) {
@@ -1091,6 +1092,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
           </div>
           <input placeholder="Student Code" value={studentCode} onChange={(e) => setStudentCode(e.target.value)} className={inputCls} style={inputStyle} />
           <input type="tel" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" placeholder="Mobile No." value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={inputCls} style={inputStyle} />
+          <input type="email" autoCapitalize="none" autoCorrect="off" placeholder="Email (optional)" value={email} onChange={(e) => setEmail(e.target.value.toLowerCase().trim())} className={inputCls} style={inputStyle} />
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Date of Birth</label>
             <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} style={inputStyle} />
