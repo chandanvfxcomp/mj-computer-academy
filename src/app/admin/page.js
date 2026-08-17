@@ -154,11 +154,22 @@ export default function AdminDashboard() {
       .update({ status: "approved", screenshot_url: null, screenshot_path: null })
       .eq("id", payment.id);
     // Best-effort: student ko email se receipt confirmation bhej do (agar unka email hai)
-    fetch("/api/admin/send-receipt-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentId: payment.id }),
-    }).catch(() => {});
+    try {
+      const emailRes = await fetch("/api/admin/send-receipt-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId: payment.id }),
+      });
+      const emailResult = await emailRes.json();
+      if (!emailRes.ok) {
+        console.error("Email not sent:", emailResult.error);
+        alert(`Payment approved, but email could not be sent: ${emailResult.error}`);
+      } else if (emailResult.skipped) {
+        console.log("Email skipped:", emailResult.reason);
+      }
+    } catch (err) {
+      console.error("Email request failed:", err);
+    }
     await loadData();
   }
 
@@ -1206,11 +1217,19 @@ function AddPaymentModal({ student, onClose, onDone }) {
       return;
     }
     if (inserted) {
-      fetch("/api/admin/send-receipt-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentId: inserted.id }),
-      }).catch(() => {});
+      try {
+        const emailRes = await fetch("/api/admin/send-receipt-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentId: inserted.id }),
+        });
+        const emailResult = await emailRes.json();
+        if (!emailRes.ok) {
+          alert(`Payment saved, but email could not be sent: ${emailResult.error}`);
+        }
+      } catch {
+        // ignore — payment itself is already saved
+      }
     }
     onDone();
   }
