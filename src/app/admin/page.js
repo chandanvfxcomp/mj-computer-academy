@@ -1204,7 +1204,7 @@ function AddPaymentModal({ student, onClose, onDone }) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-display text-lg font-bold mb-1">Add Payment</h3>
-        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>{student.full_name} (admin entry — instantly approved)</p>
+        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>{student.full_name} (recorded here — instantly approved)</p>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input required type="number" min="1" placeholder="Amount (₹)" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} style={inputStyle} />
           <input required type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className={inputCls} style={inputStyle} />
