@@ -1,4 +1,5 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
@@ -23,7 +24,25 @@ export async function POST(request) {
 
   const { studentId, fullName, courseId, customFee, customDuration, nextInstallmentAmount, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate } = await request.json();
 
-  const { error } = await supabase
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  // Agar naya email diya gaya hai, toh actual login-email (Supabase Auth) bhi update karo,
+  // warna profile mein email dikhega lekin login us naye email se kaam nahi karega
+  const trimmedEmail = email?.trim() || null;
+  if (trimmedEmail) {
+    const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(studentId, {
+      email: trimmedEmail,
+      email_confirm: true,
+    });
+    if (authUpdateError) {
+      return NextResponse.json({ error: `Login email update failed: ${authUpdateError.message}` }, { status: 400 });
+    }
+  }
+
+  const { error } = await adminClient
     .from("profiles")
     .update({
       full_name: fullName,
@@ -34,7 +53,7 @@ export async function POST(request) {
       payment_plan: paymentPlan || "monthly",
       student_code: studentCode || null,
       phone: phone || null,
-      email: email?.trim() || null,
+      email: trimmedEmail,
       date_of_birth: dob || null,
       guardian_phone: guardianPhone || null,
       batch_timing: batchTiming || null,
