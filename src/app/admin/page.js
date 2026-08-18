@@ -95,6 +95,24 @@ export default function AdminDashboard() {
     init();
   }, [supabase, router, loadData]);
 
+  // Real-time: koi bhi payment submit/update/delete ho, dashboard automatically refresh ho jaye
+  useEffect(() => {
+    if (checking) return;
+    const channel = supabase
+      .channel("admin-payments-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, () => {
+        loadData();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, checking, loadData]);
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/");
@@ -782,6 +800,15 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
     if (onDone) await onDone();
   }
 
+  async function deletePayment(payment) {
+    if (!confirm(`Permanently delete this ₹${Number(payment.amount).toLocaleString("en-IN")} payment record? This cannot be undone.`)) return;
+    if (payment.screenshot_path) {
+      await supabase.storage.from("payment-screenshots").remove([payment.screenshot_path]);
+    }
+    await supabase.from("payments").delete().eq("id", payment.id);
+    if (onDone) await onDone();
+  }
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
@@ -850,6 +877,13 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
                           Download
                         </button>
                       )}
+                      <button
+                        onClick={() => deletePayment(p)}
+                        className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border"
+                        style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 )}
