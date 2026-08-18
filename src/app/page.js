@@ -12,6 +12,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search.includes("timeout=1")) {
+      setTimedOut(true);
+    }
+  }, []);
 
   useEffect(() => {
     async function checkExisting() {
@@ -31,6 +38,18 @@ export default function LoginPage() {
       }
     }
     checkExisting();
+
+    // Agar is browser mein kisi doosre tab se ya kisi aur tareeke se session ban jaye,
+    // login page turant detect karke redirect kar de
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        checkExisting();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [supabase]);
 
   async function handleLogin(e) {
@@ -90,6 +109,12 @@ export default function LoginPage() {
             Fee Payment Portal
           </p>
         </div>
+
+        {timedOut && (
+          <div className="mb-4 text-sm text-center px-3 py-2 rounded-lg" style={{ background: "#FDF0DA", color: "#946200" }}>
+            You were logged out due to inactivity. Please log in again.
+          </div>
+        )}
 
         <form
           onSubmit={handleLogin}

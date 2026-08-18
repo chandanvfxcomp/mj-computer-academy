@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { installmentInfo, planLabel } from "@/lib/installment";
 import { getNextDueDate, googleCalendarLink } from "@/lib/dueDate";
+import { useIdleLogout } from "@/lib/useIdleLogout";
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -79,6 +80,12 @@ export default function StudentDashboard() {
     await supabase.auth.signOut();
     router.push("/");
   }
+
+  // 15 minute tak koi activity na ho toh security ke liye automatically logout
+  useIdleLogout(async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/?timeout=1";
+  }, 15);
 
   const totalFee = profile?.custom_fee != null ? Number(profile.custom_fee) : profile?.courses?.fee != null ? Number(profile.courses.fee) : null;
   const totalPaid = payments.filter((p) => p.status === "approved").reduce((sum, p) => sum + Number(p.amount), 0);
