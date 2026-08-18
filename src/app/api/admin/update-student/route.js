@@ -29,17 +29,18 @@ export async function POST(request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  // Agar naya email diya gaya hai, toh actual login-email (Supabase Auth) bhi update karo,
-  // warna profile mein email dikhega lekin login us naye email se kaam nahi karega
+  // Naya email diya ho toh login-email usse update karo. Agar email hata diya (clear kiya) ho,
+  // toh purana email kabhi active nahi rehna chahiye — student-code based login pe switch kar do.
   const trimmedEmail = email?.trim() || null;
-  if (trimmedEmail) {
-    const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(studentId, {
-      email: trimmedEmail,
-      email_confirm: true,
-    });
-    if (authUpdateError) {
-      return NextResponse.json({ error: `Login email update failed: ${authUpdateError.message}` }, { status: 400 });
-    }
+  const fallbackEmail = `${(studentCode || "").toLowerCase() || studentId}@mjcomputeracademy.local`;
+  const newAuthEmail = trimmedEmail || fallbackEmail;
+
+  const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(studentId, {
+    email: newAuthEmail,
+    email_confirm: true,
+  });
+  if (authUpdateError) {
+    return NextResponse.json({ error: `Login email update failed: ${authUpdateError.message}` }, { status: 400 });
   }
 
   const { error } = await adminClient
