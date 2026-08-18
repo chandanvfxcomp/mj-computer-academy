@@ -146,6 +146,21 @@ export default function LoginPage() {
             </a>
           </p>
         </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
+            This portal is used solely for collecting educational course fees for MJ Computer Academy students.
+          </p>
+          <p className="text-xs mt-2 space-x-2" style={{ color: "var(--muted)" }}>
+            <a href="/terms-and-conditions" className="underline">Terms</a>
+            <span>•</span>
+            <a href="/privacy-policy" className="underline">Privacy Policy</a>
+            <span>•</span>
+            <a href="/refund-policy" className="underline">Refund Policy</a>
+            <span>•</span>
+            <a href="/contact-us" className="underline">Contact Us</a>
+          </p>
+        </div>
       </div>
     </div>
   );
