@@ -56,6 +56,25 @@ export default function StudentDashboard() {
     init();
   }, [supabase, router, loadData]);
 
+  // Real-time: admin approve/reject kare ya payment update ho, dashboard automatically refresh ho jaye
+  useEffect(() => {
+    if (checking || !profile?.id) return;
+    const channel = supabase
+      .channel("student-payments-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "payments", filter: `student_id=eq.${profile.id}` },
+        () => {
+          loadData(profile.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, checking, profile?.id, loadData]);
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/");
