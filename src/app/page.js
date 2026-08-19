@@ -102,7 +102,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg)" }}>
       <div className="w-full max-w-sm">
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 animate-fade-in-up">
           <img src="/logo.png" alt="MJ Computer Academy" className="w-28 h-28 mx-auto object-contain" />
           <h1 className="font-display text-2xl font-bold" style={{ color: "var(--navy)" }}>MJ Computer Academy</h1>
           <p className="text-sm mt-1 font-medium" style={{ color: "var(--gold)" }}>
@@ -111,14 +111,14 @@ export default function LoginPage() {
         </div>
 
         {timedOut && (
-          <div className="mb-4 text-sm text-center px-3 py-2 rounded-lg" style={{ background: "#FDF0DA", color: "#946200" }}>
+          <div className="mb-4 text-sm text-center px-3 py-2 rounded-lg animate-fade-in" style={{ background: "#FDF0DA", color: "#946200" }}>
             You were logged out due to inactivity. Please log in again.
           </div>
         )}
 
         <form
           onSubmit={handleLogin}
-          className="bg-white rounded-2xl p-6 shadow-lg border"
+          className="bg-white rounded-2xl p-6 shadow-lg border animate-fade-in-up stagger-1"
           style={{ borderColor: "#E9EAF0" }}
         >
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--muted)" }}>

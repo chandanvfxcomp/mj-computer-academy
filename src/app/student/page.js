@@ -7,6 +7,7 @@ import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { installmentInfo, planLabel } from "@/lib/installment";
 import { getNextDueDate, googleCalendarLink } from "@/lib/dueDate";
 import { useIdleLogout } from "@/lib/useIdleLogout";
+import { useCountUp } from "@/lib/useCountUp";
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -154,12 +155,12 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
+        <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 card-hover animate-fade-in-up">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm" style={{ color: "var(--muted)" }}>Total Fee Paid</p>
               <p className="font-display text-3xl font-bold mt-1" style={{ color: "var(--success)" }}>
-                ₹{totalPaid.toLocaleString("en-IN")}{totalFee != null && <span className="text-lg font-normal" style={{ color: "var(--muted)" }}> / ₹{totalFee.toLocaleString("en-IN")}</span>}
+                ₹{useCountUp(totalPaid).toLocaleString("en-IN")}{totalFee != null && <span className="text-lg font-normal" style={{ color: "var(--muted)" }}> / ₹{totalFee.toLocaleString("en-IN")}</span>}
               </p>
             </div>
             <button
@@ -198,7 +199,7 @@ export default function StudentDashboard() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
+        <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 card-hover animate-fade-in-up stagger-1">
           <p className="font-display text-sm font-bold mb-2">My Details</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {profile?.student_code || "N/A"}</p>
@@ -220,8 +221,8 @@ export default function StudentDashboard() {
           </div>
         ) : (
           <div className="space-y-3">
-            {payments.map((p) => (
-              <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between">
+            {payments.map((p, idx) => (
+              <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between card-hover animate-fade-in-up" style={{ animationDelay: `${Math.min(idx * 0.05, 0.3)}s` }}>
                 <div>
                   <p className="font-semibold flex items-center gap-2">
                     ₹{Number(p.amount).toLocaleString("en-IN")}
@@ -371,8 +372,8 @@ function MakePaymentModal({ studentId, suggestedAmount, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-scale-in">
         <h3 className="font-display text-lg font-bold mb-1">Submit Payment</h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
           This will be confirmed after admin approval.

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { generateIdCardPDF } from "@/lib/generateIdCard";
 import { getNextDueDate } from "@/lib/dueDate";
+import { useCountUp } from "@/lib/useCountUp";
 
 function downloadCSV(filename, rows) {
   const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -252,20 +253,20 @@ export default function AdminDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up">
             <p className="text-sm" style={{ color: "var(--muted)" }}>Total Students</p>
-            <p className="font-display text-3xl font-bold mt-1">{students.length}</p>
+            <p className="font-display text-3xl font-bold mt-1">{useCountUp(students.length)}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up stagger-1">
             <p className="text-sm" style={{ color: "var(--muted)" }}>Total Collected</p>
             <p className="font-display text-3xl font-bold mt-1" style={{ color: "var(--success)" }}>
-              ₹{totalCollected.toLocaleString("en-IN")}
+              ₹{useCountUp(totalCollected).toLocaleString("en-IN")}
             </p>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up stagger-2">
             <p className="text-sm" style={{ color: "var(--muted)" }}>Pending Approval</p>
             <p className="font-display text-3xl font-bold mt-1" style={{ color: pendingPayments.length ? "var(--danger)" : "inherit" }}>
-              {pendingPayments.length}
+              {useCountUp(pendingPayments.length)}
             </p>
           </div>
         </div>
@@ -648,8 +649,8 @@ function StaffModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-scale-in">
         <h3 className="font-display text-lg font-bold mb-1">Manage Staff</h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
           Staff (e.g. receptionist) can view students, add and approve payments — but cannot add/edit/delete students, manage courses, or reset passwords. Assign a category to limit them to only that category&apos;s students.
@@ -755,7 +756,7 @@ function EditStaffModal({ staff, onClose, onDone }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-start justify-center px-4 z-[60] overflow-y-auto py-8">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-scale-in">
         <h3 className="font-display text-lg font-bold mb-4">Edit Staff</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
@@ -810,8 +811,8 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-lg animate-scale-in">
         <h3 className="font-display text-lg font-bold mb-1">Payment History</h3>
         <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>{student.full_name}</p>
 
@@ -951,8 +952,8 @@ function AddStudentModal({ courses, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-scale-in">
         <h3 className="font-display text-lg font-bold mb-4">Add New Student</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
@@ -1112,8 +1113,8 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-scale-in">
         <h3 className="font-display text-lg font-bold mb-4">Edit Student</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input required placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} style={inputStyle} />
@@ -1270,7 +1271,7 @@ function AddPaymentModal({ student, onClose, onDone }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-scale-in">
         <h3 className="font-display text-lg font-bold mb-1">Add Payment</h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>{student.full_name} (recorded here — instantly approved)</p>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -1339,8 +1340,8 @@ function CoursesModal({ courses, onClose, onDone }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-scale-in">
         <h3 className="font-display text-lg font-bold mb-4">Manage Courses</h3>
         <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
           {courses.map((c) => (
