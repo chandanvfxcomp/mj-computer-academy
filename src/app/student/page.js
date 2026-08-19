@@ -123,6 +123,9 @@ export default function StudentDashboard() {
     }
   }, [nextDueDate, nextDue]);
 
+  // Hooks hamesha early-return se PEHLE call karne hain
+  const totalPaidAnimated = useCountUp(totalPaid);
+
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
@@ -160,7 +163,7 @@ export default function StudentDashboard() {
             <div>
               <p className="text-sm" style={{ color: "var(--muted)" }}>Total Fee Paid</p>
               <p className="font-display text-3xl font-bold mt-1" style={{ color: "var(--success)" }}>
-                ₹{useCountUp(totalPaid).toLocaleString("en-IN")}{totalFee != null && <span className="text-lg font-normal" style={{ color: "var(--muted)" }}> / ₹{totalFee.toLocaleString("en-IN")}</span>}
+                ₹{totalPaidAnimated.toLocaleString("en-IN")}{totalFee != null && <span className="text-lg font-normal" style={{ color: "var(--muted)" }}> / ₹{totalFee.toLocaleString("en-IN")}</span>}
               </p>
             </div>
             <button

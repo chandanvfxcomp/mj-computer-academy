@@ -217,6 +217,11 @@ export default function AdminDashboard() {
     await loadData();
   }
 
+  // Hooks hamesha early-return se PEHLE call karne hain, warna React crash kar sakta hai
+  const studentsCountAnimated = useCountUp(students.length);
+  const totalCollectedAnimated = useCountUp(totalCollected);
+  const pendingCountAnimated = useCountUp(pendingPayments.length);
+
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
@@ -255,18 +260,18 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up">
             <p className="text-sm" style={{ color: "var(--muted)" }}>Total Students</p>
-            <p className="font-display text-3xl font-bold mt-1">{useCountUp(students.length)}</p>
+            <p className="font-display text-3xl font-bold mt-1">{studentsCountAnimated}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up stagger-1">
             <p className="text-sm" style={{ color: "var(--muted)" }}>Total Collected</p>
             <p className="font-display text-3xl font-bold mt-1" style={{ color: "var(--success)" }}>
-              ₹{useCountUp(totalCollected).toLocaleString("en-IN")}
+              ₹{totalCollectedAnimated.toLocaleString("en-IN")}
             </p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up stagger-2">
             <p className="text-sm" style={{ color: "var(--muted)" }}>Pending Approval</p>
             <p className="font-display text-3xl font-bold mt-1" style={{ color: pendingPayments.length ? "var(--danger)" : "inherit" }}>
-              {useCountUp(pendingPayments.length)}
+              {pendingCountAnimated}
             </p>
           </div>
         </div>
