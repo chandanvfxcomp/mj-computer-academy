@@ -101,3 +101,46 @@ button:active {
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 8px;
 }
+
+/* ===== Login page floating background ===== */
+@keyframes floatBlob1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+@keyframes floatBlob2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-40px, 30px) scale(1.05); }
+  66% { transform: translate(25px, -25px) scale(0.9); }
+}
+@keyframes floatBlob3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, 40px) scale(1.15); }
+}
+
+.bg-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+.bg-blob-1 { animation: floatBlob1 14s ease-in-out infinite; }
+.bg-blob-2 { animation: floatBlob2 18s ease-in-out infinite; }
+.bg-blob-3 { animation: floatBlob3 22s ease-in-out infinite; }
+
+@keyframes driftDot {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(-120px) translateX(15px); opacity: 0; }
+}
+.bg-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--gold-light);
+  animation: driftDot linear infinite;
+  pointer-events: none;
+}
