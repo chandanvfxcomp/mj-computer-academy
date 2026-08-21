@@ -164,6 +164,26 @@ export default function AdminDashboard() {
     .filter((p) => p.status === "approved")
     .reduce((sum, p) => sum + Number(p.amount), 0);
 
+  // Pichle 6 mahino ka month-wise collection (analytics chart ke liye)
+  const monthlyCollection = (() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, label: d.toLocaleDateString("en-IN", { month: "short" }), total: 0 });
+    }
+    payments
+      .filter((p) => p.status === "approved")
+      .forEach((p) => {
+        const d = new Date(p.payment_date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const bucket = months.find((m) => m.key === key);
+        if (bucket) bucket.total += Number(p.amount);
+      });
+    return months;
+  })();
+  const maxMonthly = Math.max(...monthlyCollection.map((m) => m.total), 1);
+
   async function approvePayment(payment) {
     if (payment.screenshot_path) {
       await supabase.storage.from("payment-screenshots").remove([payment.screenshot_path]);
@@ -338,6 +358,30 @@ export default function AdminDashboard() {
             📄 Export Payments CSV
           </button>
         </div>
+
+        {/* Collection analytics */}
+        <div className="bg-white rounded-2xl shadow-sm p-5 mb-8 card-hover animate-fade-in-up stagger-3">
+          <h2 className="font-display text-lg font-bold mb-4">Collection Trend (Last 6 Months)</h2>
+          <div className="flex items-end justify-between gap-3" style={{ height: 140 }}>
+            {monthlyCollection.map((m) => (
+              <div key={m.key} className="flex-1 flex flex-col items-center justify-end h-full">
+                <p className="text-xs font-semibold mb-1" style={{ color: "var(--navy)" }}>
+                  {m.total > 0 ? `₹${m.total >= 1000 ? (m.total / 1000).toFixed(1) + "k" : m.total}` : ""}
+                </p>
+                <div
+                  className="w-full rounded-t-lg"
+                  style={{
+                    height: `${Math.max((m.total / maxMonthly) * 100, m.total > 0 ? 4 : 1)}%`,
+                    background: m.total > 0 ? "var(--gold)" : "#EEF0F4",
+                    transition: "height 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+                  }}
+                />
+                <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>{m.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {pendingPayments.length > 0 && (
           <div className="mb-8">
             <h2 className="font-display text-lg font-bold mb-3">Pending Payments (Needs Approval)</h2>
