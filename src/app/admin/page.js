@@ -296,6 +296,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {false && (
         <div className="flex gap-2 mb-8">
           <button
             onClick={() =>
@@ -358,6 +359,7 @@ export default function AdminDashboard() {
             📄 Export Payments CSV
           </button>
         </div>
+        )}
 
         {/* Collection analytics */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-8 card-hover animate-fade-in-up stagger-3">
