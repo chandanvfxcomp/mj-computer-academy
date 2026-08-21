@@ -26,6 +26,26 @@ function genReceiptNumber() {
 }
 
 const inputCls = "w-full border rounded-lg px-3 py-2";
+
+function CourseIcon({ category, size = 22 }) {
+  const isComputer = category === "computer";
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {isComputer ? (
+        <>
+          <rect x="2.5" y="4" width="19" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M8.5 20h7M12 16v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M6.5 7.5h11M6.5 10.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <path d="M12 3L2 8l10 5 8-4.2V15" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+          <path d="M6 10.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-5.5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        </>
+      )}
+    </svg>
+  );
+}
 const BATCH_OPTIONS = [
   "Morning (7:00 - 9:00 AM)",
   "Morning (9:00 - 11:00 AM)",
@@ -490,15 +510,42 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4 mb-8 flex flex-wrap gap-2">
+        <div className="mb-8">
           {courses.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--muted)" }}>No courses yet.</p>
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <p className="text-sm" style={{ color: "var(--muted)" }}>No courses yet.</p>
+            </div>
           ) : (
-            courses.map((c) => (
-              <span key={c.id} className="text-xs font-medium px-3 py-1.5 rounded-full" style={{ background: "var(--bg)", color: "var(--navy)" }}>
-                {c.name} — ₹{Number(c.fee).toLocaleString("en-IN")}
-              </span>
-            ))
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {courses.map((c, idx) => {
+                const isComputer = c.category === "computer";
+                return (
+                  <div
+                    key={c.id}
+                    className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up relative overflow-hidden"
+                    style={{ animationDelay: `${Math.min(idx * 0.04, 0.3)}s` }}
+                  >
+                    <div
+                      className="absolute -right-4 -top-4 w-16 h-16 rounded-full opacity-10"
+                      style={{ background: isComputer ? "var(--navy)" : "var(--gold)" }}
+                    />
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                      style={{ background: isComputer ? "var(--navy)" : "var(--gold-light)", color: isComputer ? "var(--gold-light)" : "var(--navy)" }}
+                    >
+                      <CourseIcon category={c.category} />
+                    </div>
+                    <p className="font-semibold text-sm leading-snug mb-1">{c.name}</p>
+                    <p className="font-display text-lg font-bold" style={{ color: "var(--success)" }}>
+                      ₹{Number(c.fee).toLocaleString("en-IN")}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+                      {c.duration_months} months • {isComputer ? "Computer" : "Academic"}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 

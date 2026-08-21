@@ -158,6 +158,39 @@ export default function StudentDashboard() {
           </div>
         )}
 
+        {profile?.courses?.name && (
+          <div className="rounded-2xl p-5 shadow-sm mb-6 card-hover animate-fade-in-up relative overflow-hidden text-white" style={{ background: "var(--navy)" }}>
+            <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-10" style={{ background: "var(--gold)" }} />
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--gold)", color: "var(--navy)" }}>
+                <CourseIcon category={profile?.courses?.category} />
+              </div>
+              <div>
+                <p className="text-xs" style={{ color: "var(--gold-light)" }}>My Course</p>
+                <p className="font-display text-lg font-bold leading-tight">{profile.courses.name}</p>
+              </div>
+            </div>
+            {totalFee != null && (
+              <div className="mt-3">
+                <div className="w-full h-2 rounded-full bg-white/15 overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.min((totalPaid / totalFee) * 100, 100)}%`,
+                      background: "var(--gold)",
+                      transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+                    }}
+                  />
+                </div>
+                <p className="text-xs mt-1.5" style={{ color: "var(--gold-light)" }}>
+                  {Math.min(Math.round((totalPaid / totalFee) * 100), 100)}% fee paid
+                  {profile?.batch_timing ? ` • ${profile.batch_timing}` : ""}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 card-hover animate-fade-in-up">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -272,6 +305,26 @@ export default function StudentDashboard() {
         />
       )}
     </div>
+  );
+}
+
+function CourseIcon({ category, size = 26 }) {
+  const isComputer = category === "computer";
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {isComputer ? (
+        <>
+          <rect x="2.5" y="4" width="19" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M8.5 20h7M12 16v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M6.5 7.5h11M6.5 10.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <path d="M12 3L2 8l10 5 8-4.2V15" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+          <path d="M6 10.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-5.5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        </>
+      )}
+    </svg>
   );
 }
 
