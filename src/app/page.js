@@ -100,25 +100,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden" style={{ background: "var(--bg)" }}>
-      {/* Floating background decoration */}
-      <div className="bg-blob bg-blob-1" style={{ width: 260, height: 260, top: "8%", left: "5%", background: "var(--navy)" }} />
-      <div className="bg-blob bg-blob-2" style={{ width: 220, height: 220, bottom: "10%", right: "8%", background: "var(--gold)" }} />
-      <div className="bg-blob bg-blob-3" style={{ width: 180, height: 180, top: "55%", left: "70%", background: "var(--navy-light)" }} />
-      {[...Array(10)].map((_, i) => (
-        <span
-          key={i}
-          className="bg-dot"
-          style={{
-            left: `${8 + i * 9}%`,
-            bottom: "-10px",
-            animationDuration: `${8 + (i % 5) * 2}s`,
-            animationDelay: `${i * 0.7}s`,
-          }}
-        />
-      ))}
-
-      <div className="w-full max-w-sm relative z-10">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--bg)" }}>
+      <div className="w-full max-w-sm">
         <div className="text-center mb-6 animate-fade-in-up">
           <img src="/logo.png" alt="MJ Computer Academy" className="w-28 h-28 mx-auto object-contain" />
           <h1 className="font-display text-2xl font-bold" style={{ color: "var(--navy)" }}>MJ Computer Academy</h1>
