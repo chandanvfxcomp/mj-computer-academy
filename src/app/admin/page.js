@@ -204,6 +204,23 @@ export default function AdminDashboard() {
   })();
   const maxMonthly = Math.max(...monthlyCollection.map((m) => m.total), 1);
 
+  const monthsWithData = monthlyCollection.filter((m) => m.total > 0);
+  const avgPerMonth = monthsWithData.length ? Math.round(monthlyCollection.reduce((s, m) => s + m.total, 0) / monthlyCollection.length) : 0;
+  const bestMonth = monthlyCollection.reduce((best, m) => (m.total > best.total ? m : best), monthlyCollection[0]);
+  const thisMonthEntry = monthlyCollection[monthlyCollection.length - 1];
+  const prevMonthEntry = monthlyCollection[monthlyCollection.length - 2];
+  const growthRate = prevMonthEntry && prevMonthEntry.total > 0
+    ? Math.round(((thisMonthEntry.total - prevMonthEntry.total) / prevMonthEntry.total) * 100)
+    : (thisMonthEntry?.total > 0 ? 100 : 0);
+  const bestMonthPctOfTotal = totalCollected > 0 ? Math.round((bestMonth.total / totalCollected) * 100) : 0;
+
+  function studentCountForCourse(courseId) {
+    return students.filter((s) => s.course_id === courseId).length;
+  }
+  const avgCourseDuration = courses.length
+    ? (courses.reduce((s, c) => s + (c.duration_months || 0), 0) / courses.length).toFixed(1)
+    : 0;
+
   async function approvePayment(payment) {
     if (payment.screenshot_path) {
       await supabase.storage.from("payment-screenshots").remove([payment.screenshot_path]);
@@ -305,22 +322,79 @@ export default function AdminDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up">
-            <p className="text-sm" style={{ color: "var(--muted)" }}>Total Students</p>
-            <p className="font-display text-3xl font-bold mt-1">{studentsCountAnimated}</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+          <div className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "#EEF0FF" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3.5a1.5 1.5 0 1 0 0 3H18" stroke="#6D5BD0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>Total Students</p>
+            <p className="font-display text-2xl font-bold mt-0.5">{studentsCountAnimated}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up stagger-1">
-            <p className="text-sm" style={{ color: "var(--muted)" }}>Total Collected</p>
-            <p className="font-display text-3xl font-bold mt-1" style={{ color: "var(--success)" }}>
-              ₹{totalCollectedAnimated.toLocaleString("en-IN")}
+
+          <div className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up stagger-1">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "#E6F6EE" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 17l5-5 4 4 8-9" stroke="#1E9E5A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 7h5v5" stroke="#1E9E5A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>Total Collected</p>
+            <p className="font-display text-2xl font-bold mt-0.5" style={{ color: "var(--success)" }}>₹{totalCollectedAnimated.toLocaleString("en-IN")}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up stagger-2">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "#FDF0DA" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#B3792A" strokeWidth="1.7" /><path d="M12 7v5l3.5 2" stroke="#B3792A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>Pending Approval</p>
+            <p className="font-display text-2xl font-bold mt-0.5" style={{ color: pendingPayments.length ? "var(--danger)" : "inherit" }}>{pendingCountAnimated}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up stagger-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "#E7F0FF" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3" stroke="#2A6DC7" strokeWidth="1.8" strokeLinecap="round" /></svg>
+            </div>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>Average / Month</p>
+            <p className="font-display text-2xl font-bold mt-0.5">₹{avgPerMonth.toLocaleString("en-IN")}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up stagger-4">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: growthRate >= 0 ? "#E6F6EE" : "#FBE9E5" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                {growthRate >= 0 ? (
+                  <path d="M4 16l6-6 4 4 6-7M14 7h6v6" stroke="#1E9E5A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                ) : (
+                  <path d="M4 8l6 6 4-4 6 7M14 17h6v-6" stroke="#B3402A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                )}
+              </svg>
+            </div>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>Growth Rate</p>
+            <p className="font-display text-2xl font-bold mt-0.5" style={{ color: growthRate >= 0 ? "var(--success)" : "var(--danger)" }}>
+              {growthRate >= 0 ? "+" : ""}{growthRate}%
             </p>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm card-hover animate-fade-in-up stagger-2">
-            <p className="text-sm" style={{ color: "var(--muted)" }}>Pending Approval</p>
-            <p className="font-display text-3xl font-bold mt-1" style={{ color: pendingPayments.length ? "var(--danger)" : "inherit" }}>
-              {pendingCountAnimated}
-            </p>
+        </div>
+
+        {/* This month highlight */}
+        <div
+          className="rounded-2xl p-5 mb-8 card-hover animate-fade-in-up stagger-4 relative overflow-hidden text-white"
+          style={{ background: "linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%)" }}
+        >
+          <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-10" style={{ background: "var(--gold)" }} />
+          <div className="flex items-center justify-between relative">
+            <div>
+              <p className="text-xs" style={{ color: "var(--gold-light)" }}>This Month ({thisMonthEntry?.label})</p>
+              <p className="font-display text-2xl font-bold mt-1">₹{Number(thisMonthEntry?.total || 0).toLocaleString("en-IN")}</p>
+              <p className="text-xs mt-1 flex items-center gap-1.5">
+                <span
+                  className="px-1.5 py-0.5 rounded-full font-semibold"
+                  style={{ background: growthRate >= 0 ? "rgba(30,158,90,0.25)" : "rgba(179,64,42,0.25)", color: growthRate >= 0 ? "#6EE0A5" : "#F0A090" }}
+                >
+                  {growthRate >= 0 ? "↑" : "↓"} {Math.abs(growthRate)}%
+                </span>
+                <span style={{ color: "var(--gold-light)" }}>vs {prevMonthEntry?.label}</span>
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" /></svg>
+            </div>
           </div>
         </div>
 
@@ -390,37 +464,79 @@ export default function AdminDashboard() {
         )}
 
         {/* Collection analytics */}
-        <div className="bg-white rounded-2xl shadow-sm p-5 mb-8 card-hover animate-fade-in-up stagger-3">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-lg font-bold">Collection Trend</h2>
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "var(--bg)", color: "var(--muted)" }}>
-              Last 6 Months
-            </span>
-          </div>
-          <div className="flex items-end justify-between gap-3" style={{ height: 150 }}>
-            {monthlyCollection.map((m, idx) => {
-              const heightPct = chartAnimated ? Math.max((m.total / maxMonthly) * 100, m.total > 0 ? 4 : 1) : 0;
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm p-5 card-hover animate-fade-in-up stagger-3 flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-bold">Collection Trend</h2>
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "var(--bg)", color: "var(--muted)" }}>
+                Last 6 Months
+              </span>
+            </div>
+            {(() => {
+              const W = 600, H = 190, padL = 10, padR = 10, padT = 34, padB = 26;
+              const n = monthlyCollection.length;
+              const stepX = (W - padL - padR) / Math.max(n - 1, 1);
+              const points = monthlyCollection.map((m, i) => {
+                const x = padL + i * stepX;
+                const y = H - padB - (m.total / maxMonthly) * (H - padT - padB);
+                return { x, y, m };
+              });
+              const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+              const areaPath = `${linePath} L${points[points.length - 1].x},${H - padB} L${points[0].x},${H - padB} Z`;
               return (
-                <div key={m.key} className="flex-1 flex flex-col items-center justify-end h-full group">
-                  <p
-                    className="text-xs font-semibold mb-1 transition-opacity duration-300"
-                    style={{ color: "var(--navy)", opacity: chartAnimated ? 1 : 0 }}
-                  >
-                    {m.total > 0 ? `₹${m.total >= 1000 ? (m.total / 1000).toFixed(1) + "k" : m.total}` : ""}
-                  </p>
-                  <div
-                    className="w-full rounded-t-lg group-hover:brightness-110"
+                <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 190 }}>
+                  <defs>
+                    <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--navy)" stopOpacity="0.22" />
+                      <stop offset="100%" stopColor="var(--navy)" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {[0.25, 0.5, 0.75].map((f) => (
+                    <line key={f} x1={padL} x2={W - padR} y1={padT + f * (H - padT - padB)} y2={padT + f * (H - padT - padB)} stroke="#EEF0F4" strokeWidth="1" strokeDasharray="4 4" />
+                  ))}
+                  <path
+                    d={areaPath}
+                    fill="url(#areaFill)"
+                    style={{ opacity: chartAnimated ? 1 : 0, transition: "opacity 1s ease 0.3s" }}
+                  />
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke="var(--gold)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    pathLength="1"
                     style={{
-                      height: `${heightPct}%`,
-                      background: m.total > 0 ? "linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 100%)" : "#EEF0F4",
-                      transition: `height 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.07}s, filter 0.2s ease`,
-                      boxShadow: m.total > 0 ? "0 4px 10px rgba(200, 155, 60, 0.25)" : "none",
+                      strokeDasharray: 1,
+                      strokeDashoffset: chartAnimated ? 0 : 1,
+                      transition: "stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1)",
                     }}
                   />
-                  <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>{m.label}</p>
-                </div>
+                  {points.map((p, i) => (
+                    <g key={p.m.key} style={{ opacity: chartAnimated ? 1 : 0, transition: `opacity 0.3s ease ${0.6 + i * 0.1}s` }}>
+                      <text x={p.x} y={p.y - 10} textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--navy)">
+                        {p.m.total > 0 ? `₹${p.m.total >= 1000 ? (p.m.total / 1000).toFixed(1) + "k" : p.m.total}` : ""}
+                      </text>
+                      <circle cx={p.x} cy={p.y} r="4" fill="var(--gold)" stroke="white" strokeWidth="2" />
+                      <text x={p.x} y={H - 6} textAnchor="middle" fontSize="10" fill="var(--muted)">
+                        {p.m.label}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
               );
-            })}
+            })()}
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-5 card-hover animate-fade-in-up stagger-4 md:w-52 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2" style={{ background: "#FDF0DA" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 0 1-10 0V4z" stroke="var(--gold)" strokeWidth="1.7" strokeLinejoin="round" /><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" /><path d="M12 12v4M9 20h6M10 16h4v4h-4z" stroke="var(--gold)" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+            </div>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>Best Month</p>
+            <p className="font-display text-base font-bold mt-0.5">{bestMonth?.label} {new Date().getFullYear()}</p>
+            <p className="font-display text-xl font-bold mt-1" style={{ color: "var(--success)" }}>₹{Number(bestMonth?.total || 0).toLocaleString("en-IN")}</p>
+            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>{bestMonthPctOfTotal}% of total collection</p>
           </div>
         </div>
 
@@ -509,64 +625,131 @@ export default function AdminDashboard() {
         )}
 
         {/* Courses */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-lg font-bold">Courses</h2>
+        <div className="flex flex-col lg:flex-row gap-4 mb-8">
           {isAdmin && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowStaff(true)}
-                className="text-sm font-semibold px-3 py-1.5 rounded-lg border"
-                style={{ borderColor: "#E2E4EA" }}
-              >
-                Manage Staff
-              </button>
-              <button
-                onClick={() => setShowCourses(true)}
-                className="text-sm font-semibold px-3 py-1.5 rounded-lg"
-                style={{ background: "var(--gold-light)", color: "var(--navy)" }}
-              >
-                Manage Courses
-              </button>
-            </div>
-          )}
-        </div>
-        <div className="mb-8">
-          {courses.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-sm p-4">
-              <p className="text-sm" style={{ color: "var(--muted)" }}>No courses yet.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {courses.map((c, idx) => {
-                const isComputer = c.category === "computer";
-                return (
-                  <div
-                    key={c.id}
-                    className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up relative overflow-hidden"
-                    style={{ animationDelay: `${Math.min(idx * 0.04, 0.3)}s` }}
-                  >
-                    <div
-                      className="absolute -right-4 -top-4 w-16 h-16 rounded-full opacity-10"
-                      style={{ background: isComputer ? "var(--navy)" : "var(--gold)" }}
-                    />
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                      style={{ background: isComputer ? "var(--navy)" : "var(--gold-light)", color: isComputer ? "var(--gold-light)" : "var(--navy)" }}
-                    >
-                      <CourseIcon category={c.category} />
-                    </div>
-                    <p className="font-semibold text-sm leading-snug mb-1">{c.name}</p>
-                    <p className="font-display text-lg font-bold" style={{ color: "var(--success)" }}>
-                      ₹{Number(c.fee).toLocaleString("en-IN")}
-                    </p>
-                    <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-                      {c.duration_months} months • {isComputer ? "Computer" : "Academic"}
-                    </p>
+            <div className="bg-white rounded-2xl shadow-sm p-4 lg:w-56 shrink-0 card-hover animate-fade-in-up">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--navy)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z" stroke="var(--gold)" strokeWidth="1.6" strokeLinejoin="round" /><path d="M6 10v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5" stroke="var(--gold)" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Courses Overview</p>
+                  <p className="text-xs" style={{ color: "var(--muted)" }}>Quick summary</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#EEF0FF" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="#6D5BD0" strokeWidth="1.6" /></svg>
                   </div>
-                );
-              })}
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>Total Courses</p>
+                    <p className="font-display text-base font-bold">{courses.length}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#E6F6EE" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="2.8" stroke="#1E9E5A" strokeWidth="1.5" /><path d="M3.5 19c0-3 2.5-5.3 5.5-5.3s5.5 2.3 5.5 5.3" stroke="#1E9E5A" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>Total Students</p>
+                    <p className="font-display text-base font-bold">{students.length}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#FDF0DA" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 17l5-5 4 4 8-9" stroke="#B3792A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>Total Revenue</p>
+                    <p className="font-display text-base font-bold">₹{totalCollected.toLocaleString("en-IN")}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#E7F0FF" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#2A6DC7" strokeWidth="1.6" /><path d="M12 8v4l2.5 1.5" stroke="#2A6DC7" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--muted)" }}>Avg. Duration</p>
+                    <p className="font-display text-base font-bold">{avgCourseDuration} Months</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <div>
+                <h2 className="font-display text-xl font-bold">Our Courses</h2>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>Manage and track all your courses</p>
+              </div>
+              {isAdmin && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowStaff(true)}
+                    className="text-sm font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                    style={{ borderColor: "#E2E4EA" }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="var(--navy)" strokeWidth="1.6" /><path d="M3.5 19c0-3 2.5-5.3 5.5-5.3s5.5 2.3 5.5 5.3" stroke="var(--navy)" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                    Staff Management
+                  </button>
+                  <button
+                    onClick={() => setShowCourses(true)}
+                    className="text-sm font-semibold px-3 py-1.5 rounded-lg text-white flex items-center gap-1.5"
+                    style={{ background: "var(--navy)" }}
+                  >
+                    + Add New Course
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {courses.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm p-4">
+                <p className="text-sm" style={{ color: "var(--muted)" }}>No courses yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                {courses.map((c, idx) => {
+                  const isComputer = c.category === "computer";
+                  return (
+                    <div
+                      key={c.id}
+                      className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up relative"
+                      style={{ animationDelay: `${Math.min(idx * 0.04, 0.3)}s` }}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div
+                          className="w-11 h-11 rounded-xl flex items-center justify-center"
+                          style={{ background: isComputer ? "var(--navy)" : "var(--gold-light)", color: isComputer ? "var(--gold-light)" : "var(--navy)" }}
+                        >
+                          <CourseIcon category={c.category} />
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#C7CAD4" }}><path d="M6 3.5h12v18l-6-4-6 4v-18z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
+                      </div>
+                      <p className="font-semibold text-sm leading-snug mb-1">{c.name}</p>
+                      <p className="font-display text-lg font-bold" style={{ color: "var(--success)" }}>
+                        ₹{Number(c.fee).toLocaleString("en-IN")}
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>
+                          {c.duration_months} months • {isComputer ? "Computer" : "Academic"}
+                        </p>
+                        <span
+                          className="text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"
+                          style={{ background: "var(--bg)", color: "var(--navy)" }}
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="2.8" stroke="currentColor" strokeWidth="1.6" /><path d="M3.5 19c0-3 2.5-5.3 5.5-5.3s5.5 2.3 5.5 5.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                          {studentCountForCourse(c.id)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center justify-between mb-4 gap-3">
