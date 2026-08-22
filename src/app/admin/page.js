@@ -262,6 +262,14 @@ export default function AdminDashboard() {
   const totalCollectedAnimated = useCountUp(totalCollected);
   const pendingCountAnimated = useCountUp(pendingPayments.length);
 
+  const [chartAnimated, setChartAnimated] = useState(false);
+  useEffect(() => {
+    if (!checking) {
+      const t = setTimeout(() => setChartAnimated(true), 150);
+      return () => clearTimeout(t);
+    }
+  }, [checking]);
+
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
@@ -383,24 +391,36 @@ export default function AdminDashboard() {
 
         {/* Collection analytics */}
         <div className="bg-white rounded-2xl shadow-sm p-5 mb-8 card-hover animate-fade-in-up stagger-3">
-          <h2 className="font-display text-lg font-bold mb-4">Collection Trend (Last 6 Months)</h2>
-          <div className="flex items-end justify-between gap-3" style={{ height: 140 }}>
-            {monthlyCollection.map((m) => (
-              <div key={m.key} className="flex-1 flex flex-col items-center justify-end h-full">
-                <p className="text-xs font-semibold mb-1" style={{ color: "var(--navy)" }}>
-                  {m.total > 0 ? `₹${m.total >= 1000 ? (m.total / 1000).toFixed(1) + "k" : m.total}` : ""}
-                </p>
-                <div
-                  className="w-full rounded-t-lg"
-                  style={{
-                    height: `${Math.max((m.total / maxMonthly) * 100, m.total > 0 ? 4 : 1)}%`,
-                    background: m.total > 0 ? "var(--gold)" : "#EEF0F4",
-                    transition: "height 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
-                  }}
-                />
-                <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>{m.label}</p>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-lg font-bold">Collection Trend</h2>
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: "var(--bg)", color: "var(--muted)" }}>
+              Last 6 Months
+            </span>
+          </div>
+          <div className="flex items-end justify-between gap-3" style={{ height: 150 }}>
+            {monthlyCollection.map((m, idx) => {
+              const heightPct = chartAnimated ? Math.max((m.total / maxMonthly) * 100, m.total > 0 ? 4 : 1) : 0;
+              return (
+                <div key={m.key} className="flex-1 flex flex-col items-center justify-end h-full group">
+                  <p
+                    className="text-xs font-semibold mb-1 transition-opacity duration-300"
+                    style={{ color: "var(--navy)", opacity: chartAnimated ? 1 : 0 }}
+                  >
+                    {m.total > 0 ? `₹${m.total >= 1000 ? (m.total / 1000).toFixed(1) + "k" : m.total}` : ""}
+                  </p>
+                  <div
+                    className="w-full rounded-t-lg group-hover:brightness-110"
+                    style={{
+                      height: `${heightPct}%`,
+                      background: m.total > 0 ? "linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 100%)" : "#EEF0F4",
+                      transition: `height 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.07}s, filter 0.2s ease`,
+                      boxShadow: m.total > 0 ? "0 4px 10px rgba(200, 155, 60, 0.25)" : "none",
+                    }}
+                  />
+                  <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>{m.label}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -749,7 +769,17 @@ function StaffModal({ onClose }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-scale-in">
-        <h3 className="font-display text-lg font-bold mb-1">Manage Staff</h3>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--navy)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="9" cy="8" r="3.2" stroke="var(--gold-light)" strokeWidth="1.6" />
+              <path d="M3.5 20c0-3.3 2.5-5.8 5.5-5.8s5.5 2.5 5.5 5.8" stroke="var(--gold-light)" strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx="17.5" cy="9" r="2.3" stroke="var(--gold-light)" strokeWidth="1.4" />
+              <path d="M14.5 20c0-2.4 1.5-4.4 3.5-4.9" stroke="var(--gold-light)" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </div>
+          <h3 className="font-display text-lg font-bold">Manage Staff</h3>
+        </div>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
           Staff (e.g. receptionist) can view students, add and approve payments — but cannot add/edit/delete students, manage courses, or reset passwords. Assign a category to limit them to only that category&apos;s students.
         </p>
@@ -760,17 +790,34 @@ function StaffModal({ onClose }) {
           ) : staffList.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--muted)" }}>No staff accounts yet.</p>
           ) : (
-            staffList.map((st) => (
-              <div key={st.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
-                <div>
-                  <p className="text-sm font-medium">{st.full_name}</p>
-                  <p className="text-xs" style={{ color: "var(--muted)" }}>{st.email}</p>
-                  <p className="text-xs font-semibold" style={{ color: "var(--gold)" }}>{categoryLabel(st.staff_category)}</p>
+            staffList.map((st, idx) => (
+              <div
+                key={st.id}
+                className="flex items-center justify-between rounded-xl px-3 py-2.5 card-hover animate-fade-in-up"
+                style={{ background: "var(--bg)", animationDelay: `${idx * 0.05}s` }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-display font-bold text-xs"
+                    style={{ background: "var(--navy)", color: "var(--gold-light)" }}
+                  >
+                    {(st.full_name || "?").trim().charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{st.full_name}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--muted)" }}>{st.email}</p>
+                    <span
+                      className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-0.5"
+                      style={{ background: "var(--gold-light)", color: "var(--navy)" }}
+                    >
+                      {categoryLabel(st.staff_category)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex gap-1.5">
+                <div className="flex gap-1.5 shrink-0">
                   <button
                     onClick={() => setEditingStaff(st)}
-                    className="text-xs px-2 py-1 rounded border"
+                    className="text-xs px-2 py-1 rounded-lg border bg-white"
                     style={{ borderColor: "#E2E4EA" }}
                   >
                     Edit
@@ -1440,35 +1487,58 @@ function CoursesModal({ courses, onClose, onDone }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-scale-in">
-        <h3 className="font-display text-lg font-bold mb-4">Manage Courses</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--gold)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 6.5C4 5.7 4.7 5 5.5 5H12v14H5.5c-.8 0-1.5-.7-1.5-1.5v-11z" stroke="var(--navy)" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M20 6.5c0-.8-.7-1.5-1.5-1.5H12v14h6.5c.8 0 1.5-.7 1.5-1.5v-11z" stroke="var(--navy)" strokeWidth="1.5" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h3 className="font-display text-lg font-bold">Manage Courses</h3>
+        </div>
         <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
-          {courses.map((c) => (
-            <div key={c.id} className="flex items-center justify-between border rounded-lg px-3 py-2" style={{ borderColor: "#E2E4EA" }}>
-              <div>
-                <span className="text-sm font-medium block">{c.name}</span>
-                <span className="text-xs" style={{ color: "var(--muted)" }}>
-                  {c.duration_months} months • {c.category === "academic" ? "Academic (MJ code)" : "Computer (MJCA code)"}
-                </span>
+          {courses.map((c, idx) => {
+            const isComputer = c.category !== "academic";
+            return (
+              <div
+                key={c.id}
+                className="flex items-center justify-between rounded-xl px-3 py-2.5 card-hover animate-fade-in-up"
+                style={{ background: "var(--bg)", animationDelay: `${idx * 0.04}s` }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: isComputer ? "var(--navy)" : "var(--gold-light)", color: isComputer ? "var(--gold-light)" : "var(--navy)" }}
+                  >
+                    <CourseIcon category={c.category} size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium block truncate">{c.name}</span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      {c.duration_months} months • {isComputer ? "Computer (MJCA)" : "Academic (MJ)"}
+                    </span>
+                  </div>
+                </div>
+                {editingId === c.id ? (
+                  <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
+                    <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} placeholder="Fee" className="w-20 border rounded px-2 py-1 text-sm bg-white" style={inputStyle} />
+                    <input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} placeholder="Months" className="w-16 border rounded px-2 py-1 text-sm bg-white" style={inputStyle} />
+                    <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="border rounded px-1 py-1 text-xs bg-white" style={inputStyle}>
+                      <option value="computer">Computer</option>
+                      <option value="academic">Academic</option>
+                    </select>
+                    <button onClick={() => saveFee(c.id)} className="text-xs font-semibold px-2 py-1 rounded" style={{ background: "var(--success)", color: "white" }}>Save</button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-sm font-semibold" style={{ color: "var(--success)" }}>₹{Number(c.fee).toLocaleString("en-IN")}</span>
+                    <button onClick={() => { setEditingId(c.id); setEditFee(c.fee); setEditDuration(c.duration_months); setEditCategory(c.category || "computer"); }} className="text-xs px-2 py-1 rounded-lg border bg-white" style={{ borderColor: "#E2E4EA" }}>Edit</button>
+                    <button onClick={() => removeCourse(c.id)} className="text-xs px-2 py-1 rounded-lg border bg-white" style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}>Del</button>
+                  </div>
+                )}
               </div>
-              {editingId === c.id ? (
-                <div className="flex items-center gap-1 flex-wrap justify-end">
-                  <input type="number" value={editFee} onChange={(e) => setEditFee(e.target.value)} placeholder="Fee" className="w-20 border rounded px-2 py-1 text-sm" style={inputStyle} />
-                  <input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} placeholder="Months" className="w-16 border rounded px-2 py-1 text-sm" style={inputStyle} />
-                  <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="border rounded px-1 py-1 text-xs" style={inputStyle}>
-                    <option value="computer">Computer</option>
-                    <option value="academic">Academic</option>
-                  </select>
-                  <button onClick={() => saveFee(c.id)} className="text-xs font-semibold px-2 py-1 rounded" style={{ background: "var(--success)", color: "white" }}>Save</button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">₹{Number(c.fee).toLocaleString("en-IN")}</span>
-                  <button onClick={() => { setEditingId(c.id); setEditFee(c.fee); setEditDuration(c.duration_months); setEditCategory(c.category || "computer"); }} className="text-xs px-2 py-1 rounded border" style={{ borderColor: "#E2E4EA" }}>Edit</button>
-                  <button onClick={() => removeCourse(c.id)} className="text-xs px-2 py-1 rounded border" style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}>Del</button>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <form onSubmit={handleAdd} className="space-y-2 border-t pt-4" style={{ borderColor: "#E2E4EA" }}>
