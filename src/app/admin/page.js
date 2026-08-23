@@ -26,6 +26,17 @@ function genReceiptNumber() {
 }
 
 const inputCls = "w-full border rounded-lg px-3 py-2";
+const AVATAR_COLORS = ["#6D5BD0", "#1E9E5A", "#D9722E", "#2A6DC7", "#B3402A", "#0EA5A0"];
+function avatarColorFor(name) {
+  const s = name || "?";
+  let hash = 0;
+  for (let i = 0; i < s.length; i++) hash = s.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+function initialsFor(name) {
+  const parts = (name || "?").trim().split(/\s+/);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+}
 
 function CourseIcon({ category, size = 22 }) {
   const isComputer = category === "computer";
@@ -44,6 +55,41 @@ function CourseIcon({ category, size = 22 }) {
         </>
       )}
     </svg>
+  );
+}
+function CourseCardIcon({ course, containerSize = 44, iconSize = 22 }) {
+  const name = (course.name || "").toLowerCase();
+  const isComputer = course.category === "computer";
+  const baseStyle = { width: containerSize, height: containerSize };
+
+  if (name.includes("graphic") || name.includes("design")) {
+    return (
+      <div className="rounded-xl flex items-center justify-center font-display font-bold shrink-0" style={{ ...baseStyle, background: "#1B3A5C", color: "#31C4E8", fontSize: containerSize * 0.42 }}>
+        Ps
+      </div>
+    );
+  }
+  if (name.includes("bundle")) {
+    return (
+      <div className="rounded-xl flex items-center justify-center font-display font-bold shrink-0" style={{ ...baseStyle, background: "#15161A", color: "white", fontSize: containerSize * 0.24, letterSpacing: "0.02em" }}>
+        DCA
+      </div>
+    );
+  }
+  if (name.includes("tally")) {
+    return (
+      <div className="rounded-xl flex items-center justify-center font-display font-bold italic shrink-0" style={{ ...baseStyle, background: "#1552A0", color: "white", fontSize: containerSize * 0.24 }}>
+        Tally
+      </div>
+    );
+  }
+  return (
+    <div
+      className="rounded-xl flex items-center justify-center shrink-0"
+      style={{ ...baseStyle, background: isComputer ? "var(--navy)" : "var(--gold-light)", color: isComputer ? "var(--gold-light)" : "var(--navy)" }}
+    >
+      <CourseIcon category={course.category} size={iconSize} />
+    </div>
   );
 }
 const BATCH_OPTIONS = [
@@ -530,13 +576,35 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm p-5 card-hover animate-fade-in-up stagger-4 md:w-52 flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2" style={{ background: "#FDF0DA" }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 0 1-10 0V4z" stroke="var(--gold)" strokeWidth="1.7" strokeLinejoin="round" /><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" /><path d="M12 12v4M9 20h6M10 16h4v4h-4z" stroke="var(--gold)" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+            <div className="relative" style={{ width: 120, height: 120 }}>
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" stroke="#EEF0F4" strokeWidth="9" fill="none" />
+                <circle
+                  cx="60" cy="60" r="50"
+                  stroke="var(--gold)"
+                  strokeWidth="9"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 50}
+                  strokeDashoffset={chartAnimated ? 2 * Math.PI * 50 * (1 - Math.min(bestMonthPctOfTotal, 100) / 100) : 2 * Math.PI * 50}
+                  style={{
+                    transition: "stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                    transform: "rotate(-90deg)",
+                    transformOrigin: "60px 60px",
+                  }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--navy)" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3.5a1.5 1.5 0 1 0 0 3H18" stroke="var(--gold)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+              </div>
             </div>
-            <p className="text-xs" style={{ color: "var(--muted)" }}>Best Month</p>
-            <p className="font-display text-base font-bold mt-0.5">{bestMonth?.label} {new Date().getFullYear()}</p>
-            <p className="font-display text-xl font-bold mt-1" style={{ color: "var(--success)" }}>₹{Number(bestMonth?.total || 0).toLocaleString("en-IN")}</p>
-            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>{bestMonthPctOfTotal}% of total collection</p>
+            <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>Total Collection</p>
+            <p className="font-display text-xl font-bold mt-0.5" style={{ color: "var(--success)" }}>₹{Number(totalCollected).toLocaleString("en-IN")}</p>
+            <p className="text-xs mt-1" style={{ color: growthRate >= 0 ? "var(--success)" : "var(--danger)" }}>
+              {growthRate >= 0 ? "↑" : "↓"} {Math.abs(growthRate)}% vs last month
+            </p>
           </div>
         </div>
 
@@ -720,12 +788,7 @@ export default function AdminDashboard() {
                       style={{ animationDelay: `${Math.min(idx * 0.04, 0.3)}s` }}
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <div
-                          className="w-11 h-11 rounded-xl flex items-center justify-center"
-                          style={{ background: isComputer ? "var(--navy)" : "var(--gold-light)", color: isComputer ? "var(--gold-light)" : "var(--navy)" }}
-                        >
-                          <CourseIcon category={c.category} />
-                        </div>
+                        <CourseCardIcon course={c} containerSize={44} iconSize={22} />
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#C7CAD4" }}><path d="M6 3.5h12v18l-6-4-6 4v-18z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
                       </div>
                       <p className="font-semibold text-sm leading-snug mb-1">{c.name}</p>
@@ -803,13 +866,23 @@ export default function AdminDashboard() {
                   const paid = totalPaidFor(s.id);
                   const fee = feeFor(s);
                   return (
-                    <tr key={s.id} className="border-b last:border-0 align-top">
+                    <tr key={s.id} className="border-b last:border-0 align-top hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
-                        <p className="font-medium">{s.full_name}</p>
-                        <p className="text-xs" style={{ color: "var(--muted)" }}>
-                          {[s.email, s.phone].filter(Boolean).join(" • ") || "—"}
-                        </p>
-                        <p className="text-xs" style={{ color: "var(--muted)" }}>{s.student_code || "no code"}</p>
+                        <div className="flex items-start gap-2.5">
+                          <div
+                            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-display font-bold text-xs text-white"
+                            style={{ background: avatarColorFor(s.full_name) }}
+                          >
+                            {initialsFor(s.full_name)}
+                          </div>
+                          <div>
+                            <p className="font-medium">{s.full_name}</p>
+                            <p className="text-xs" style={{ color: "var(--muted)" }}>
+                              {[s.email, s.phone].filter(Boolean).join(" • ") || "—"}
+                            </p>
+                            <p className="text-xs" style={{ color: "var(--muted)" }}>{s.student_code || "no code"}</p>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3">{s.courses?.name || "—"}</td>
                       <td className="px-4 py-3">
@@ -1689,12 +1762,7 @@ function CoursesModal({ courses, onClose, onDone }) {
                 style={{ background: "var(--bg)", animationDelay: `${idx * 0.04}s` }}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: isComputer ? "var(--navy)" : "var(--gold-light)", color: isComputer ? "var(--gold-light)" : "var(--navy)" }}
-                  >
-                    <CourseIcon category={c.category} size={18} />
-                  </div>
+                  <CourseCardIcon course={c} containerSize={36} iconSize={18} />
                   <div className="min-w-0">
                     <span className="text-sm font-medium block truncate">{c.name}</span>
                     <span className="text-xs" style={{ color: "var(--muted)" }}>
