@@ -11,6 +11,8 @@
   --muted: #5C6478;
   --success: #1E7A4C;
   --danger: #B3402A;
+  --accent: #6D5BD0;
+  --accent-light: #8B7CE8;
 }
 
 * {

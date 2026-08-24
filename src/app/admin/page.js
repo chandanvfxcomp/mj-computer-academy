@@ -533,8 +533,8 @@ export default function AdminDashboard() {
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 190 }}>
                   <defs>
                     <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--navy)" stopOpacity="0.22" />
-                      <stop offset="100%" stopColor="var(--navy)" stopOpacity="0" />
+                      <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                   {[0.25, 0.5, 0.75].map((f) => (
@@ -548,7 +548,7 @@ export default function AdminDashboard() {
                   <path
                     d={linePath}
                     fill="none"
-                    stroke="var(--gold)"
+                    stroke="var(--accent)"
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -564,7 +564,7 @@ export default function AdminDashboard() {
                       <text x={p.x} y={p.y - 10} textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--navy)">
                         {p.m.total > 0 ? `₹${p.m.total >= 1000 ? (p.m.total / 1000).toFixed(1) + "k" : p.m.total}` : ""}
                       </text>
-                      <circle cx={p.x} cy={p.y} r="4" fill="var(--gold)" stroke="white" strokeWidth="2" />
+                      <circle cx={p.x} cy={p.y} r="4" fill="var(--accent)" stroke="white" strokeWidth="2" />
                       <text x={p.x} y={H - 6} textAnchor="middle" fontSize="10" fill="var(--muted)">
                         {p.m.label}
                       </text>
@@ -578,10 +578,17 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-2xl shadow-sm p-5 card-hover animate-fade-in-up stagger-4 md:w-52 flex flex-col items-center justify-center text-center">
             <div className="relative" style={{ width: 120, height: 120 }}>
               <svg width="120" height="120" viewBox="0 0 120 120">
+                <defs>
+                  <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="60%" stopColor="var(--accent)" stopOpacity="0.12" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+                <circle cx="60" cy="60" r="58" fill="url(#ringGlow)" />
                 <circle cx="60" cy="60" r="50" stroke="#EEF0F4" strokeWidth="9" fill="none" />
                 <circle
                   cx="60" cy="60" r="50"
-                  stroke="var(--gold)"
+                  stroke="var(--accent)"
                   strokeWidth="9"
                   fill="none"
                   strokeLinecap="round"
@@ -595,8 +602,8 @@ export default function AdminDashboard() {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--navy)" }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3.5a1.5 1.5 0 1 0 0 3H18" stroke="var(--gold)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: "var(--accent)" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3.5a1.5 1.5 0 1 0 0 3H18" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </div>
               </div>
             </div>
@@ -757,15 +764,15 @@ export default function AdminDashboard() {
                   <button
                     onClick={() => setShowStaff(true)}
                     className="text-sm font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
-                    style={{ borderColor: "#E2E4EA" }}
+                    style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="var(--navy)" strokeWidth="1.6" /><path d="M3.5 19c0-3 2.5-5.3 5.5-5.3s5.5 2.3 5.5 5.3" stroke="var(--navy)" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="var(--accent)" strokeWidth="1.6" /><path d="M3.5 19c0-3 2.5-5.3 5.5-5.3s5.5 2.3 5.5 5.3" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" /></svg>
                     Staff Management
                   </button>
                   <button
                     onClick={() => setShowCourses(true)}
                     className="text-sm font-semibold px-3 py-1.5 rounded-lg text-white flex items-center gap-1.5"
-                    style={{ background: "var(--navy)" }}
+                    style={{ background: "var(--accent)" }}
                   >
                     + Add New Course
                   </button>
@@ -789,7 +796,7 @@ export default function AdminDashboard() {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <CourseCardIcon course={c} containerSize={44} iconSize={22} />
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#C7CAD4" }}><path d="M6 3.5h12v18l-6-4-6 4v-18z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#C7CAD4" }}><circle cx="12" cy="6" r="1.6" fill="currentColor" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><circle cx="12" cy="18" r="1.6" fill="currentColor" /></svg>
                       </div>
                       <p className="font-semibold text-sm leading-snug mb-1">{c.name}</p>
                       <p className="font-display text-lg font-bold" style={{ color: "var(--success)" }}>
@@ -829,7 +836,7 @@ export default function AdminDashboard() {
               <button
                 onClick={() => setShowAddStudent(true)}
                 className="px-4 py-2 rounded-lg text-white text-sm font-semibold whitespace-nowrap"
-                style={{ background: "var(--navy)" }}
+                style={{ background: "var(--accent)" }}
               >
                 + Add Student
               </button>
