@@ -111,6 +111,8 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState([]);
   const [courses, setCourses] = useState([]);
   const [showAddStudent, setShowAddStudent] = useState(false);
+  const [presetCourseId, setPresetCourseId] = useState(null);
+  const [showHiddenCourses, setShowHiddenCourses] = useState(false);
   const [showEditStudent, setShowEditStudent] = useState(null);
   const [showAddPayment, setShowAddPayment] = useState(null);
   const [showCourses, setShowCourses] = useState(false);
@@ -757,27 +759,41 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
               <div>
                 <h2 className="font-display text-xl font-bold">Our Courses</h2>
-                <p className="text-xs" style={{ color: "var(--muted)" }}>Manage and track all your courses</p>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>Manage and track all your courses • Click a course to add a student to it</p>
               </div>
-              {isAdmin && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowStaff(true)}
-                    className="text-sm font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
-                    style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="var(--accent)" strokeWidth="1.6" /><path d="M3.5 19c0-3 2.5-5.3 5.5-5.3s5.5 2.3 5.5 5.3" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" /></svg>
-                    Staff Management
-                  </button>
-                  <button
-                    onClick={() => setShowCourses(true)}
-                    className="text-sm font-semibold px-3 py-1.5 rounded-lg text-white flex items-center gap-1.5"
-                    style={{ background: "var(--accent)" }}
-                  >
-                    + Add New Course
-                  </button>
-                </div>
-              )}
+              <div className="flex gap-2 items-center">
+                <button
+                  onClick={() => setShowHiddenCourses((v) => !v)}
+                  className="text-sm font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                  style={{ borderColor: "#E2E4EA", color: "var(--muted)" }}
+                >
+                  {showHiddenCourses ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" stroke="currentColor" strokeWidth="1.6" /><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" /></svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 3l18 18M10.6 10.6a3 3 0 004.24 4.24M9.9 5.1A10.7 10.7 0 0112 5c6 0 10 7 10 7a13.4 13.4 0 01-3.1 3.9M6.5 6.6C4 8.3 2 12 2 12s4 7 10 7c1.3 0 2.5-.3 3.6-.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                  )}
+                  {showHiddenCourses ? "Hide Hidden" : "Show Hidden"}
+                </button>
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={() => setShowStaff(true)}
+                      className="text-sm font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                      style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="var(--accent)" strokeWidth="1.6" /><path d="M3.5 19c0-3 2.5-5.3 5.5-5.3s5.5 2.3 5.5 5.3" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                      Staff Management
+                    </button>
+                    <button
+                      onClick={() => setShowCourses(true)}
+                      className="text-sm font-semibold px-3 py-1.5 rounded-lg text-white flex items-center gap-1.5"
+                      style={{ background: "var(--accent)" }}
+                    >
+                      + Add New Course
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             {courses.length === 0 ? (
@@ -786,17 +802,32 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                {courses.map((c, idx) => {
+                {courses
+                  .filter((c) => showHiddenCourses || c.active !== false)
+                  .map((c, idx) => {
                   const isComputer = c.category === "computer";
+                  const isHidden = c.active === false;
                   return (
                     <div
                       key={c.id}
+                      onClick={() => {
+                        if (!isAdmin || isHidden) return;
+                        setPresetCourseId(c.id);
+                        setShowAddStudent(true);
+                      }}
                       className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up relative"
-                      style={{ animationDelay: `${Math.min(idx * 0.04, 0.3)}s` }}
+                      style={{ animationDelay: `${Math.min(idx * 0.04, 0.3)}s`, cursor: isAdmin && !isHidden ? "pointer" : "default", opacity: isHidden ? 0.55 : 1 }}
                     >
+                      {isHidden && (
+                        <span className="absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#F3D5D0", color: "var(--danger)" }}>
+                          Hidden
+                        </span>
+                      )}
                       <div className="flex items-start justify-between mb-2">
                         <CourseCardIcon course={c} containerSize={44} iconSize={22} />
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#C7CAD4" }}><circle cx="12" cy="6" r="1.6" fill="currentColor" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><circle cx="12" cy="18" r="1.6" fill="currentColor" /></svg>
+                        {!isHidden && (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#C7CAD4" }}><circle cx="12" cy="6" r="1.6" fill="currentColor" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><circle cx="12" cy="18" r="1.6" fill="currentColor" /></svg>
+                        )}
                       </div>
                       <p className="font-semibold text-sm leading-snug mb-1">{c.name}</p>
                       <p className="font-display text-lg font-bold" style={{ color: "var(--success)" }}>
@@ -933,7 +964,12 @@ export default function AdminDashboard() {
       </main>
 
       {showAddStudent && (
-        <AddStudentModal courses={courses} onClose={() => setShowAddStudent(false)} onDone={async () => { setShowAddStudent(false); await loadData(); }} />
+        <AddStudentModal
+          courses={courses}
+          initialCourseId={presetCourseId}
+          onClose={() => { setShowAddStudent(false); setPresetCourseId(null); }}
+          onDone={async () => { setShowAddStudent(false); setPresetCourseId(null); await loadData(); }}
+        />
       )}
       {showEditStudent && (
         <EditStudentModal student={showEditStudent} courses={courses} onClose={() => setShowEditStudent(null)} onDone={async () => { setShowEditStudent(null); await loadData(); }} />
@@ -1309,12 +1345,12 @@ function StudentHistoryModal({ student, payments, onClose, onDone }) {
   );
 }
 
-function AddStudentModal({ courses, onClose, onDone }) {
+function AddStudentModal({ courses, initialCourseId, onClose, onDone }) {
   const supabase = createClient();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [courseId, setCourseId] = useState("");
+  const [courseId, setCourseId] = useState(initialCourseId || "");
   const [customFee, setCustomFee] = useState("");
   const [customDuration, setCustomDuration] = useState("");
   const [nextInstallmentAmount, setNextInstallmentAmount] = useState("");
@@ -1747,6 +1783,11 @@ function CoursesModal({ courses, onClose, onDone }) {
     onDone();
   }
 
+  async function toggleActive(course) {
+    await supabase.from("courses").update({ active: course.active === false ? true : false }).eq("id", course.id);
+    onDone();
+  }
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-start justify-center px-4 z-50 overflow-y-auto py-8 modal-overlay-animate">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-scale-in">
@@ -1790,6 +1831,9 @@ function CoursesModal({ courses, onClose, onDone }) {
                 ) : (
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-sm font-semibold" style={{ color: "var(--success)" }}>₹{Number(c.fee).toLocaleString("en-IN")}</span>
+                    <button onClick={() => toggleActive(c)} className="text-xs px-2 py-1 rounded-lg border bg-white" style={{ borderColor: c.active === false ? "var(--success)" : "#E2E4EA", color: c.active === false ? "var(--success)" : "var(--muted)" }}>
+                      {c.active === false ? "Unhide" : "Hide"}
+                    </button>
                     <button onClick={() => { setEditingId(c.id); setEditFee(c.fee); setEditDuration(c.duration_months); setEditCategory(c.category || "computer"); }} className="text-xs px-2 py-1 rounded-lg border bg-white" style={{ borderColor: "#E2E4EA" }}>Edit</button>
                     <button onClick={() => removeCourse(c.id)} className="text-xs px-2 py-1 rounded-lg border bg-white" style={{ borderColor: "#F3D5D0", color: "var(--danger)" }}>Del</button>
                   </div>
