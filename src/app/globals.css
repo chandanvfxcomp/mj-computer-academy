@@ -103,3 +103,27 @@ button:active {
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 8px;
 }
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(-3deg); }
+}
+.icon-float {
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+.glow-pulse {
+  animation: glowPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes barShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+.bar-shimmer {
+  animation: barShimmer 2s ease-in-out infinite;
+}

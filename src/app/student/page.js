@@ -161,30 +161,53 @@ export default function StudentDashboard() {
         {profile?.courses?.name && (
           <div className="rounded-2xl p-5 shadow-sm mb-6 card-hover animate-fade-in-up relative overflow-hidden text-white" style={{ background: "var(--navy)" }}>
             <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-10" style={{ background: "var(--gold)" }} />
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--gold)", color: "var(--navy)" }}>
-                <CourseIcon category={profile?.courses?.category} />
+            <div className="absolute -left-8 -bottom-10 w-32 h-32 rounded-full opacity-[0.06]" style={{ background: "var(--accent, #6D5BD0)" }} />
+            <div className="flex items-center justify-between mb-3 relative">
+              <div className="flex items-center gap-3">
+                <div className="relative shrink-0">
+                  <div className="absolute inset-0 rounded-xl glow-pulse" style={{ background: "var(--gold)" }} />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center relative icon-float" style={{ background: "var(--gold)", color: "var(--navy)" }}>
+                    <CourseIcon category={profile?.courses?.category} />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs" style={{ color: "var(--gold-light)" }}>My Course</p>
+                  <p className="font-display text-lg font-bold leading-tight">{profile.courses.name}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs" style={{ color: "var(--gold-light)" }}>My Course</p>
-                <p className="font-display text-lg font-bold leading-tight">{profile.courses.name}</p>
-              </div>
+              {totalFee != null && (
+                <div className="text-right shrink-0">
+                  <p className="font-display text-2xl font-bold" style={{ color: "var(--gold)" }}>
+                    {Math.min(Math.round((totalPaid / totalFee) * 100), 100)}%
+                  </p>
+                  <p className="text-[10px]" style={{ color: "var(--gold-light)" }}>paid</p>
+                </div>
+              )}
             </div>
             {totalFee != null && (
-              <div className="mt-3">
-                <div className="w-full h-2 rounded-full bg-white/15 overflow-hidden">
+              <div className="mt-3 relative">
+                <div className="w-full h-2.5 rounded-full bg-white/15 overflow-hidden relative">
                   <div
-                    className="h-full rounded-full"
+                    className="h-full rounded-full relative overflow-hidden"
                     style={{
                       width: `${Math.min((totalPaid / totalFee) * 100, 100)}%`,
-                      background: "var(--gold)",
-                      transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+                      background: "linear-gradient(90deg, var(--gold-light), var(--gold))",
+                      transition: "width 1s cubic-bezier(0.16, 1, 0.3, 1)",
                     }}
-                  />
+                  >
+                    <div
+                      className="absolute inset-y-0 w-8 bar-shimmer"
+                      style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)" }}
+                    />
+                  </div>
                 </div>
-                <p className="text-xs mt-1.5" style={{ color: "var(--gold-light)" }}>
-                  {Math.min(Math.round((totalPaid / totalFee) * 100), 100)}% fee paid
-                  {profile?.batch_timing ? ` • ${profile.batch_timing}` : ""}
+                <p className="text-xs mt-2 flex items-center gap-1.5" style={{ color: "var(--gold-light)" }}>
+                  {profile?.batch_timing && (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" /><path d="M12 8v4l2.5 1.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
+                      {profile.batch_timing}
+                    </>
+                  )}
                 </p>
               </div>
             )}
