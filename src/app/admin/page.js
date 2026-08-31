@@ -1784,7 +1784,11 @@ function CoursesModal({ courses, onClose, onDone }) {
   }
 
   async function toggleActive(course) {
-    await supabase.from("courses").update({ active: course.active === false ? true : false }).eq("id", course.id);
+    const { error } = await supabase.from("courses").update({ active: course.active === false ? true : false }).eq("id", course.id);
+    if (error) {
+      alert(`Could not update course: ${error.message}`);
+      return;
+    }
     onDone();
   }
 
