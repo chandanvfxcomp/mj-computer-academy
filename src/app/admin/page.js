@@ -1354,6 +1354,7 @@ function AddStudentModal({ courses, initialCourseId, onClose, onDone }) {
   const [customFee, setCustomFee] = useState("");
   const [customDuration, setCustomDuration] = useState("");
   const [nextInstallmentAmount, setNextInstallmentAmount] = useState("");
+  const [nextInstallmentDate, setNextInstallmentDate] = useState("");
   const [paymentPlan, setPaymentPlan] = useState("monthly");
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
@@ -1372,7 +1373,7 @@ function AddStudentModal({ courses, initialCourseId, onClose, onDone }) {
     const res = await fetch("/api/admin/create-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, password, phone, courseId, customFee, customDuration, nextInstallmentAmount, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
+      body: JSON.stringify({ fullName, email, password, phone, courseId, customFee, customDuration, nextInstallmentAmount, nextInstallmentDate, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
     });
     const result = await res.json();
     if (!res.ok) {
@@ -1412,6 +1413,10 @@ function AddStudentModal({ courses, initialCourseId, onClose, onDone }) {
           <input type="number" placeholder="Custom Fee / Offer (optional, overrides course fee)" value={customFee} onChange={(e) => setCustomFee(e.target.value)} className={inputCls} style={inputStyle} />
           <input type="number" min="1" max="60" placeholder="e.g. 8 — how many months to split fee over (optional)" value={customDuration} onChange={(e) => setCustomDuration(e.target.value)} className={inputCls} style={inputStyle} />
           <input type="number" placeholder="Next Installment Amount (optional, manual override)" value={nextInstallmentAmount} onChange={(e) => setNextInstallmentAmount(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Next Installment Date (optional, manual override)</label>
+            <input type="date" value={nextInstallmentDate} onChange={(e) => setNextInstallmentDate(e.target.value)} className={inputCls} style={inputStyle} />
+          </div>
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Payment Plan</label>
             <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls} style={inputStyle}>
@@ -1485,6 +1490,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
   const [customFee, setCustomFee] = useState(student.custom_fee ?? "");
   const [customDuration, setCustomDuration] = useState(student.custom_duration_months ?? "");
   const [nextInstallmentAmount, setNextInstallmentAmount] = useState(student.next_installment_amount ?? "");
+  const [nextInstallmentDate, setNextInstallmentDate] = useState(student.next_installment_date ?? "");
   const [paymentPlan, setPaymentPlan] = useState(student.payment_plan || "monthly");
   const [phone, setPhone] = useState(student.phone || "");
   const [email, setEmail] = useState(student.email || "");
@@ -1511,7 +1517,7 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
     const res = await fetch("/api/admin/update-student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, customDuration, nextInstallmentAmount, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
+      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, customDuration, nextInstallmentAmount, nextInstallmentDate, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
     });
     const result = await res.json();
     if (!res.ok) {
@@ -1571,6 +1577,10 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
           <input type="number" placeholder="Custom Fee / Offer (optional)" value={customFee} onChange={(e) => setCustomFee(e.target.value)} className={inputCls} style={inputStyle} />
           <input type="number" min="1" max="60" placeholder="e.g. 8 — how many months to split fee over (optional)" value={customDuration} onChange={(e) => setCustomDuration(e.target.value)} className={inputCls} style={inputStyle} />
           <input type="number" placeholder="Next Installment Amount (optional, manual override)" value={nextInstallmentAmount} onChange={(e) => setNextInstallmentAmount(e.target.value)} className={inputCls} style={inputStyle} />
+          <div>
+            <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Next Installment Date (optional, manual override)</label>
+            <input type="date" value={nextInstallmentDate} onChange={(e) => setNextInstallmentDate(e.target.value)} className={inputCls} style={inputStyle} />
+          </div>
           <div>
             <label className="text-xs font-medium" style={{ color: "var(--muted)" }}>Payment Plan</label>
             <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls} style={inputStyle}>

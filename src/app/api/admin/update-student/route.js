@@ -51,6 +51,7 @@ export async function POST(request) {
       custom_fee: customFee === "" || customFee === null ? null : Number(customFee),
       custom_duration_months: customDuration === "" || customDuration == null ? null : Number(customDuration),
       next_installment_amount: nextInstallmentAmount === "" || nextInstallmentAmount == null ? null : Number(nextInstallmentAmount),
+      next_installment_date: nextInstallmentDate || null,
       payment_plan: paymentPlan || "monthly",
       student_code: studentCode || null,
       phone: phone || null,

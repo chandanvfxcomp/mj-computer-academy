@@ -4,6 +4,11 @@ export function planIntervalMonths(plan) {
 
 // Agli payment kab due hai, uske hisaab se calculate karta hai
 export function getNextDueDate(profile, approvedPayments) {
+  // Agar admin ne manually date set ki hai, wahi use karo
+  if (profile?.next_installment_date) {
+    return new Date(profile.next_installment_date);
+  }
+
   const plan = profile?.payment_plan || "monthly";
   const interval = planIntervalMonths(plan);
   if (interval == null) return null; // one_time plan mein recurring due date nahi hota
@@ -14,6 +19,8 @@ export function getNextDueDate(profile, approvedPayments) {
 
   const baseDate = new Date(baseDateStr);
   baseDate.setMonth(baseDate.getMonth() + interval);
+  // Default: agar manual date nahi di gayi, mahine ki 5 tareek tak fee due maani jaati hai
+  baseDate.setDate(5);
   return baseDate;
 }
 
