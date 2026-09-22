@@ -8,6 +8,7 @@ import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { generateIdCardPDF } from "@/lib/generateIdCard";
 import { getNextDueDate } from "@/lib/dueDate";
 import { useCountUp } from "@/lib/useCountUp";
+import { isSessionActiveFlagSet, clearSessionActiveFlag, guardAgainstBackForwardCache } from "@/lib/sessionGuard";
 
 function downloadCSV(filename, rows) {
   const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -150,6 +151,13 @@ export default function AdminDashboard() {
         router.push("/");
         return;
       }
+      // Agar ye tab/browser fresh khula hai (sessionStorage khali hai), matlab purana tab band ho chuka
+      // tha — session ko yahan trust nahi karenge, wapas login pe bhejo
+      if (!isSessionActiveFlagSet()) {
+        await supabase.auth.signOut();
+        router.push("/");
+        return;
+      }
       const res = await fetch("/api/whoami");
       const { role, staffCategory } = await res.json();
       if (role !== "admin" && role !== "staff") {
@@ -160,6 +168,7 @@ export default function AdminDashboard() {
       setMyStaffCategory(staffCategory);
       await loadData();
       setChecking(false);
+      guardAgainstBackForwardCache();
     }
     init();
   }, [supabase, router, loadData]);
@@ -184,7 +193,8 @@ export default function AdminDashboard() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/");
+    clearSessionActiveFlag();
+    window.location.href = "/";
   }
 
   function paymentsFor(studentId) {
@@ -1514,29 +1524,33 @@ function EditStudentModal({ student, courses, onClose, onDone }) {
     e.preventDefault();
     setError("");
     setBusy(true);
-    const res = await fetch("/api/admin/update-student", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, customDuration, nextInstallmentAmount, nextInstallmentDate, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      setBusy(false);
-      setError(result.error || "Update failed");
-      return;
-    }
-
-    if (photoFile) {
-      const ext = photoFile.name.split(".").pop();
-      const path = `${student.id}/photo.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("student-photos").upload(path, photoFile, { upsert: true });
-      if (!uploadError) {
-        const { data: pub } = supabase.storage.from("student-photos").getPublicUrl(path);
-        await supabase.from("profiles").update({ photo_url: pub.publicUrl }).eq("id", student.id);
+    try {
+      const res = await fetch("/api/admin/update-student", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: student.id, fullName, courseId, customFee, customDuration, nextInstallmentAmount, nextInstallmentDate, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(result.error || `Update failed (status ${res.status})`);
+        return;
       }
+
+      if (photoFile) {
+        const ext = photoFile.name.split(".").pop();
+        const path = `${student.id}/photo.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("student-photos").upload(path, photoFile, { upsert: true });
+        if (!uploadError) {
+          const { data: pub } = supabase.storage.from("student-photos").getPublicUrl(path);
+          await supabase.from("profiles").update({ photo_url: pub.publicUrl }).eq("id", student.id);
+        }
+      }
+      onDone();
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
-    onDone();
   }
 
   async function handleResetPassword() {

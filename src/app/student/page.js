@@ -8,6 +8,7 @@ import { installmentInfo, planLabel } from "@/lib/installment";
 import { getNextDueDate, googleCalendarLink } from "@/lib/dueDate";
 import { useIdleLogout } from "@/lib/useIdleLogout";
 import { useCountUp } from "@/lib/useCountUp";
+import { isSessionActiveFlagSet, clearSessionActiveFlag, guardAgainstBackForwardCache } from "@/lib/sessionGuard";
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -46,6 +47,11 @@ export default function StudentDashboard() {
         router.push("/");
         return;
       }
+      if (!isSessionActiveFlagSet()) {
+        await supabase.auth.signOut();
+        router.push("/");
+        return;
+      }
       const res = await fetch("/api/whoami");
       const { role } = await res.json();
       if (role === "admin") {
@@ -54,6 +60,7 @@ export default function StudentDashboard() {
       }
       await loadData(user.id);
       setChecking(false);
+      guardAgainstBackForwardCache();
     }
     init();
   }, [supabase, router, loadData]);
@@ -79,12 +86,14 @@ export default function StudentDashboard() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/");
+    clearSessionActiveFlag();
+    window.location.href = "/";
   }
 
   // 15 minute tak koi activity na ho toh security ke liye automatically logout
   useIdleLogout(async () => {
     await supabase.auth.signOut();
+    clearSessionActiveFlag();
     window.location.href = "/?timeout=1";
   }, 15);
 

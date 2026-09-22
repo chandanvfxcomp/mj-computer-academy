@@ -22,7 +22,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Sirf admin allowed hai" }, { status: 403 });
   }
 
-  const { studentId, fullName, courseId, customFee, customDuration, nextInstallmentAmount, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate } = await request.json();
+  const { studentId, fullName, courseId, customFee, customDuration, nextInstallmentAmount, nextInstallmentDate, studentCode, phone, email, paymentPlan, dob, guardianPhone, batchTiming, admissionDate } = await request.json();
 
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,

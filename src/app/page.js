@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { markSessionActive, isSessionActiveFlagSet, guardAgainstBackForwardCache } from "@/lib/sessionGuard";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function LoginPage() {
     if (typeof window !== "undefined" && window.location.search.includes("timeout=1")) {
       setTimedOut(true);
     }
+    guardAgainstBackForwardCache();
   }, []);
 
   useEffect(() => {
@@ -27,6 +29,13 @@ export default function LoginPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
+        setCheckingSession(false);
+        return;
+      }
+      // Agar cookie mein session hai lekin ye tab/browser fresh khula hai (sessionStorage khali hai),
+      // matlab pichla tab band ho chuka tha — dobara login maango, cookie ko ignore karke
+      if (!isSessionActiveFlagSet()) {
+        await supabase.auth.signOut();
         setCheckingSession(false);
         return;
       }
