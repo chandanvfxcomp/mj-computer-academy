@@ -91,6 +91,8 @@ export default function LoginPage() {
       return;
     }
 
+    markSessionActive();
+
     const res = await fetch("/api/whoami");
     const { role } = await res.json();
 
