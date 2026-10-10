@@ -891,7 +891,8 @@ export default function AdminDashboard() {
               No students yet. Use &quot;Add Student&quot; to add your first student.
             </p>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{ minWidth: 640 }}>
               <thead>
                 <tr className="text-left border-b" style={{ color: "var(--muted)" }}>
                   <th className="px-4 py-3">Name</th>
@@ -969,6 +970,7 @@ export default function AdminDashboard() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </main>
