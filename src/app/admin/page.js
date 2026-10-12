@@ -124,6 +124,8 @@ export default function AdminDashboard() {
   const [myRole, setMyRole] = useState(null);
   const [myStaffCategory, setMyStaffCategory] = useState(null);
   const [showStaff, setShowStaff] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState("dashboard");
   const isAdmin = myRole === "admin";
 
   const loadData = useCallback(async () => {
@@ -353,24 +355,112 @@ export default function AdminDashboard() {
     );
   }
 
+  function goTo(navKey, sectionId) {
+    setActiveNav(navKey);
+    setSidebarOpen(false);
+    const el = document.getElementById(sectionId);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  const navItems = [
+    { key: "dashboard", label: "Dashboard", sectionId: "section-dashboard", icon: "M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6h-6v6H5a2 2 0 0 1-2-2v-9z" },
+    { key: "courses", label: "Courses", sectionId: "section-courses", icon: "M4 5.5C4 4.7 4.7 4 5.5 4H12v16H5.5c-.8 0-1.5-.7-1.5-1.5v-13zM20 5.5c0-.8-.7-1.5-1.5-1.5H12v16h6.5c.8 0 1.5-.7 1.5-1.5v-13z" },
+    { key: "students", label: "Students", sectionId: "section-students", icon: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-7 7-7s7 3.1 7 7M17 11a3 3 0 1 0 0-6M19 21c0-2.6-1.2-4.8-3-6" },
+  ];
+
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
-      <header className="text-white" style={{ background: "var(--navy)" }}>
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="MJ Computer Academy" className="w-10 h-10 object-contain rounded-lg bg-white p-0.5" />
-            <div>
-              <p className="font-display font-bold leading-tight">MJ Computer Academy</p>
-              <p className="text-xs" style={{ color: "var(--gold-light)" }}>
-                {isAdmin ? "Admin Dashboard" : `Staff Dashboard — ${categoryLabel(myStaffCategory)}`}
-              </p>
+    <div className="min-h-screen md:flex" style={{ background: "var(--bg)" }}>
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/40 z-30 md:hidden modal-overlay-animate" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+      )}
+
+      <aside
+        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-60 shrink-0 flex flex-col text-white transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        style={{ background: "var(--navy)" }}
+        aria-label="Main navigation"
+      >
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+          <img src="/logo.png" alt="MJ Computer Academy" className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 shrink-0" />
+          <div className="min-w-0">
+            <p className="font-display font-bold leading-tight text-sm">MJ Computer Academy</p>
+            <p className="text-[11px] truncate" style={{ color: "var(--gold-light)" }}>
+              {isAdmin ? "Admin Dashboard" : `Staff — ${categoryLabel(myStaffCategory)}`}
+            </p>
+          </div>
+        </div>
+
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const active = activeNav === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => goTo(item.key, item.sectionId)}
+                aria-current={active ? "page" : undefined}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-colors"
+                style={{
+                  background: active ? "var(--accent)" : "transparent",
+                  color: active ? "white" : "rgba(255,255,255,0.75)",
+                }}
+                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+                onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d={item.icon} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {item.label}
+              </button>
+            );
+          })}
+
+          {isAdmin && (
+            <button
+              onClick={() => { setSidebarOpen(false); setShowStaff(true); }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-colors"
+              style={{ color: "rgba(255,255,255,0.75)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="9" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.7" />
+                <path d="M3.5 20c0-3.3 2.5-5.8 5.5-5.8s5.5 2.5 5.5 5.8M17.5 9.5a2.3 2.3 0 1 0 0-4.6M15.5 14.5c2.2.4 3.5 2.3 3.5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+              </svg>
+              Staff
+            </button>
+          )}
+        </nav>
+
+        <div className="px-3 py-4 border-t border-white/10">
+          <div className="flex items-center gap-2.5 px-2 mb-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: "var(--accent)" }}>
+              {isAdmin ? "A" : "S"}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium leading-tight">{isAdmin ? "Admin" : "Staff"}</p>
+              <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.55)" }}>{isAdmin ? "Super Admin" : "Receptionist"}</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="text-sm px-3 py-1.5 rounded-lg border border-white/30 hover:bg-white/10">
+          <button
+            onClick={handleLogout}
+            className="w-full text-sm px-3 py-2 rounded-xl border border-white/20 hover:bg-white/10 transition-colors"
+          >
             Logout
           </button>
         </div>
-      </header>
+      </aside>
+
+      <div className="flex-1 min-w-0">
+        <div className="md:hidden sticky top-0 z-20 flex items-center gap-3 px-4 py-3 text-white" style={{ background: "var(--navy)" }}>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation menu"
+            className="p-1.5 rounded-lg hover:bg-white/10"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+          </button>
+          <img src="/logo.png" alt="" className="w-7 h-7 object-contain rounded-md bg-white p-0.5" />
+          <p className="font-display font-bold text-sm">MJ Computer Academy</p>
+        </div>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         {loadError && (
@@ -380,7 +470,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+        <div id="section-dashboard" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4 scroll-mt-16">
           <div className="bg-white rounded-2xl p-4 shadow-sm card-hover animate-fade-in-up">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: "#EEF0FF" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3.5a1.5 1.5 0 1 0 0 3H18" stroke="#6D5BD0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -712,7 +802,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Courses */}
-        <div className="flex flex-col lg:flex-row gap-4 mb-8">
+        <div id="section-courses" className="flex flex-col lg:flex-row gap-4 mb-8 scroll-mt-16">
           {isAdmin && (
             <div className="bg-white rounded-2xl shadow-sm p-4 lg:w-56 shrink-0 card-hover animate-fade-in-up">
               <div className="flex items-center gap-2 mb-3">
@@ -863,7 +953,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-4 gap-3">
+        <div id="section-students" className="flex items-center justify-between mb-4 gap-3 flex-wrap scroll-mt-16">
           <h2 className="font-display text-xl font-bold">Students</h2>
           <div className="flex items-center gap-2">
             <input
@@ -974,6 +1064,7 @@ export default function AdminDashboard() {
           )}
         </div>
       </main>
+      </div>
 
       {showAddStudent && (
         <AddStudentModal
