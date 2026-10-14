@@ -269,7 +269,7 @@ export default function StudentDashboard() {
 
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 card-hover animate-fade-in-up stagger-1">
           <p className="font-display text-sm font-bold mb-2">My Details</p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs break-words" style={{ color: "var(--muted)" }}>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Code:</span> {profile?.student_code || "N/A"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Course:</span> {profile?.courses?.name || "N/A"}</p>
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Email:</span> {profile?.email || "N/A"}</p>

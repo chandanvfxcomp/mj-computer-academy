@@ -375,7 +375,7 @@ export default function AdminDashboard() {
       )}
 
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-60 shrink-0 flex flex-col text-white transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        className={`fixed md:sticky top-0 left-0 z-40 h-dvh w-60 shrink-0 flex flex-col text-white transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
         style={{ background: "var(--navy)" }}
         aria-label="Main navigation"
       >
@@ -632,7 +632,7 @@ export default function AdminDashboard() {
               const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
               const areaPath = `${linePath} L${points[points.length - 1].x},${H - padB} L${points[0].x},${H - padB} Z`;
               return (
-                <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 190 }}>
+                <div className="overflow-x-auto -mx-1 px-1"><svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 190, minWidth: 460 }}>
                   <defs>
                     <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.25" />
@@ -672,7 +672,7 @@ export default function AdminDashboard() {
                       </text>
                     </g>
                   ))}
-                </svg>
+                </svg></div>
               );
             })()}
           </div>
@@ -722,7 +722,7 @@ export default function AdminDashboard() {
             <h2 className="font-display text-lg font-bold mb-3">Pending Payments (Needs Approval)</h2>
             <div className="bg-white rounded-2xl shadow-sm divide-y">
               {pendingPayments.map((p) => (
-                <div key={p.id} className="p-4 flex items-start justify-between gap-3">
+                <div key={p.id} className="p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
                     {p.screenshot_url && (
                       <a href={p.screenshot_url} target="_blank" rel="noreferrer">
@@ -861,7 +861,7 @@ export default function AdminDashboard() {
                 <h2 className="font-display text-xl font-bold">Our Courses</h2>
                 <p className="text-xs" style={{ color: "var(--muted)" }}>Manage and track all your courses • Click a course to add a student to it</p>
               </div>
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center flex-wrap">
                 <button
                   onClick={() => setShowHiddenCourses((v) => !v)}
                   className="text-sm font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
