@@ -8,6 +8,7 @@ import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { generateIdCardPDF } from "@/lib/generateIdCard";
 import { getNextDueDate } from "@/lib/dueDate";
 import { useCountUp } from "@/lib/useCountUp";
+import ResultsSection from "./ResultsSection";
 import { isSessionActiveFlagSet, clearSessionActiveFlag, guardAgainstBackForwardCache } from "@/lib/sessionGuard";
 
 function downloadCSV(filename, rows) {
@@ -365,6 +366,7 @@ export default function AdminDashboard() {
   const navItems = [
     { key: "dashboard", label: "Dashboard", sectionId: "section-dashboard", icon: "M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6h-6v6H5a2 2 0 0 1-2-2v-9z" },
     { key: "courses", label: "Courses", sectionId: "section-courses", icon: "M4 5.5C4 4.7 4.7 4 5.5 4H12v16H5.5c-.8 0-1.5-.7-1.5-1.5v-13zM20 5.5c0-.8-.7-1.5-1.5-1.5H12v16h6.5c.8 0 1.5-.7 1.5-1.5v-13z" },
+    { key: "results", label: "Results", sectionId: "section-results", icon: "M9 3h6a2 2 0 0 1 2 2v1H7V5a2 2 0 0 1 2-2zM7 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-1M8 12h8M8 16h5" },
     { key: "students", label: "Students", sectionId: "section-students", icon: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-7 7-7s7 3.1 7 7M17 11a3 3 0 1 0 0-6M19 21c0-2.6-1.2-4.8-3-6" },
   ];
 
@@ -951,6 +953,10 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+        </div>
+
+        <div id="section-results" className="mb-8 scroll-mt-16">
+          <ResultsSection courses={courses} students={students} staffCategory={isAdmin ? null : myStaffCategory} />
         </div>
 
         <div id="section-students" className="flex items-center justify-between mb-4 gap-3 flex-wrap scroll-mt-16">
