@@ -8,6 +8,7 @@ import { installmentInfo, planLabel } from "@/lib/installment";
 import { getNextDueDate, googleCalendarLink } from "@/lib/dueDate";
 import { useIdleLogout } from "@/lib/useIdleLogout";
 import { useCountUp } from "@/lib/useCountUp";
+import ResultsCard from "./ResultsCard";
 import { isSessionActiveFlagSet, clearSessionActiveFlag, guardAgainstBackForwardCache } from "@/lib/sessionGuard";
 
 export default function StudentDashboard() {
@@ -280,6 +281,8 @@ export default function StudentDashboard() {
             <p><span className="font-semibold" style={{ color: "var(--navy)" }}>Joined:</span> {profile?.joining_date ? new Date(profile.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</p>
           </div>
         </div>
+
+        <ResultsCard profile={profile} />
 
         <h2 className="font-display text-lg font-bold mb-3">Payment History</h2>
 
